@@ -2,6 +2,7 @@ import socket, sys
 
 GREEEN = "\u001b[32m"
 RESET = "\u001b[0m"
+RED = "\u001b[31m"
 
 class Client:
     def __init__(self, ip, port, buffer_size):
@@ -19,6 +20,10 @@ class Client:
         
         except KeyboardInterrupt:
             print(f"\n\n{GREEEN}Byee :){RESET}\n")
+            sys.exit(0)
+
+        except ConnectionRefusedError:
+            print(f"\n\n{RED}Connections refused from the server!!{RESET}\n")
             sys.exit(0)
     
     def recv(self):
