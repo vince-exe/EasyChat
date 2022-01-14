@@ -1,8 +1,8 @@
 import socket, sys
 
-GREEEN = "\u001b[32m"
-RESET = "\u001b[0m"
-RED = "\u001b[31m"
+from colors.colors import Colors as colors
+
+
 
 class Client:
     def __init__(self, ip, port, buffer_size):
@@ -14,18 +14,18 @@ class Client:
         self.buffer_size = buffer_size
     
     def connect(self):
+        # try to connect...
         try:
-            # try to connect...
             self.client_socket.connect((self.ip, self.port))
         
         except KeyboardInterrupt:
-            print(f"\n\n{GREEEN}Byee :){RESET}\n")
-            sys.exit(0)
-
+            print(f"\n\n{colors.GREEEN}Byee :){colors.RESET}\n")
+            sys.exit(0)   
+        
         except ConnectionRefusedError:
-            print(f"\n\n{RED}Connections refused from the server!!{RESET}\n")
+            print(f"\n{colors.RED}Connections refused from the server!!{colors.RESET}\n")
             sys.exit(0)
-    
+        
     def recv(self):
             return self.client_socket.recv(self.buffer_size).decode('utf-8')
     
@@ -35,14 +35,3 @@ class Client:
     def close(self):
         self.client_socket.close()
 
-
-def client_main():
-    client = Client("213.45.54.55", 7000, 1024)
-    
-    client.connect()
-    print(f"\n{GREEEN}Connection established with the server{RESET}")
-    
-    while True:
-        pass
-
-client_main()
