@@ -12,20 +12,16 @@ class Client:
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self.buffer_size = buffer_size
-    
+        self.wait_time = 10
+
     def connect(self):
-        # try to connect...
-        try:
-            self.client_socket.connect((self.ip, self.port))
-        
-        except KeyboardInterrupt:
-            print(f"\n\n{colors.GREEEN}Byee :){colors.RESET}\n")
-            sys.exit(0)   
-        
-        except ConnectionRefusedError:
-            print(f"\n{colors.RED}Connections refused from the server!!{colors.RESET}\n")
-            sys.exit(0)
-        
+        # set timeout for connection
+        self.client_socket.settimeout(self.wait_time)
+        # try to connect to the server
+        self.client_socket.connect((self.ip, self.port))
+        # if connect stop the timeout
+        self.client_socket.settimeout(None)
+
     def recv(self):
             return self.client_socket.recv(self.buffer_size).decode('utf-8')
     

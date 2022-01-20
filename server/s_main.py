@@ -5,8 +5,8 @@ from colors.colors import Colors as colors, print_logo_server
 
 def create_server():
     print_logo_server()
-    port = 0
-    public_ip = None
+    print(f"\t\t       {colors.YELLOW}{colors.BOLD}Create your own Server!!{colors.RESET}")
+
     try:
         port = int(input(f"\n{colors.YELLOW}{colors.BOLD}Port: "))
         public_ip = input("\nPublic ip: ")
