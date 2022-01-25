@@ -1,4 +1,4 @@
-import socket
+import socket, threading
 
 from client.client import Client
 
@@ -16,11 +16,7 @@ class Server:
         # create the socket server
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bound the ip and the port to the socket server
-        self.server_socket.bind((self.ip, self.port))
-        # declarate the comunication socket that is returned by socket.accept()
-        self.comunication_socket = None
-        self.ip_comunication = None
-        
+        self.server_socket.bind((self.ip, self.port))  
         self.buffer_size = BUFFER_SIZE
         # create a list for the active connections
         self.active_connections = []
@@ -28,18 +24,18 @@ class Server:
         self.n_listen = n_listen
         # counter for connections
         self.connections_count = 0
-        # take care of the server status TRUE: LISTEN FALSE: NOT LISTEN
+        # take care of the server status TRUE: LISTEN / FALSE: NOT LISTEN
         self.state_listening = state
+        # True: The server is running / False: the server is not running
         self.run = run_
     
     def accept(self):
         self.server_socket.listen(self.n_listen)
-        
-        self.comunication_socket, self.ip_comunication = self.server_socket.accept()
-        self.connections_count += 1
+        return self.server_socket.accept()
         
     def get_active(self):
-        return self.connections_count
+        # -2 because we exclude the "main" thread and the "connectios_thread"
+        return threading.activeCount() - 2
 
     def close(self):
         self.run = False
@@ -50,15 +46,7 @@ class Server:
         return self.state_listening
 
     def set_status(self):
-        if self.connections_count < self.n_listen:
+        if (threading.activeCount() - 2) < self.n_listen:
             self.state_listening = True
         else:
             self.state_listening = False
-
-    def set_run(self, bool_):
-        self.run = bool_
-        
-    def get_run(self):
-        return self.run
-
-            

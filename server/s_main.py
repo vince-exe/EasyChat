@@ -51,7 +51,22 @@ def take_option():
         except ValueError:
             print(f"\n{colors.RED}Option can not be empty/string!!{colors.RESET}\n")
             
-     
+
+def close(server):
+    if server.get_active(): # if there are still active connections
+        temp = input(f"\n{colors.RED}Warning: There are still {server.get_active()} active connections!  Are you sure(y / n): {colors.RESET}")
+
+        if(temp == "y" or temp == "yes" or temp == "YES" or temp == "Y"):
+            server.close()
+            return True
+        else: 
+            return False
+
+    else: # else there aren't active connections, close the server
+        server.close()
+        return True
+        
+        
 def menu(server):
     while True:   
         try:  
@@ -68,17 +83,9 @@ def menu(server):
                 
             # close the server
             elif(opt == 2):
-                if server.get_active(): # if there are still active connections
-                    temp = input(f"\n{colors.RED}Warning: There are still {server.get_active()} active connections!  Are you sure(y / n): {colors.RESET}")
-
-                    if(temp == "y" or temp == "yes" or temp == "YES" or temp == "Y"):
-                        server.close()
-                        return False
-                        
-                else: # else there aren't active connections, close the server
-                    server.close()
+                if close(server):
                     return False
-                    
+            
             else:   # default
                 print(f"\n{colors.RED}Enter an existing option :){colors.RESET}\n")
 
@@ -87,13 +94,21 @@ def menu(server):
             return False
 
 
+def handle_clients(server, conn, ip):
+    while server.run:
+        pass
+
+        print(f"\n\nip: {ip[0]}")
+
 def accept_connections(server):
     #if the server is listening and is running
     while server.run:
-        server.accept()
+        conn, ip = server.accept()
         server.set_status()
-
-    # exit from the function so exit from the thread
+        
+        # create a thread to comunicate with the single client    
+        threading.Thread(target=handle_clients, args=(server, conn, ip)).start()
+        
     return
 
 
