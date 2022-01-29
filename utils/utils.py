@@ -1,4 +1,15 @@
+from enum import Enum
+
 import os
+
+
+class TypeOfMessages(Enum):
+    DISCONNECT_MESSAGE = "!DISCONNECT"
+    SERVER_EXIT = "!QUIT"
+
+
+def get_value(type):
+    return type.value
 
 
 class Colors:
@@ -8,7 +19,6 @@ class Colors:
     RED = "\u001b[31m"
     YELLOW = "\u001b[33m"
     BLU = "\033[94m"
-
     BOLD = "\033[1m"
     
 

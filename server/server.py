@@ -1,6 +1,7 @@
 import socket, threading
 
 from client.client import Client
+from utils.utils import TypeOfMessages, get_value
 
 MAX_CONNECTIONS = 10
 BUFFER_SIZE = 1024
@@ -28,7 +29,9 @@ class Server:
         self.state_listening = state
         # True: The server is running / False: the server is not running
         self.run = run_
-    
+        # a list that contain all the comunications sockets with the clients
+        self.client_list = []
+
     def accept(self):
         self.server_socket.listen(self.n_listen)
         return self.server_socket.accept()
@@ -37,10 +40,30 @@ class Server:
         # -2 because we exclude the "main" thread and the "connectios_thread"
         return threading.activeCount() - 2
 
-    def close(self):
-        self.run = False
+    def shutdown(self):
+        # close the server socket
+        self.server_socket.close()
+
+    def conn_close_client(self):
         # create a temp_client that connect to the server and stop it
-        Client(self.public_ip, self.port, self.buffer_size).connect()
+        t_client = Client(self.public_ip, self.port, self.buffer_size)
+        t_client.connect()
+        t_client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
+
+    def close(self, active):
+        # if there are still active connections
+        if active:
+            # disconnect all the clients
+            self.disconecct_all()
+        else:
+            self.run = False
+            self.conn_close_client()
+        
+    def disconecct_all(self):
+        for s_client in self.client_list:
+            # we have to encode this because we are not using our Clients class but socket class
+            s_client.send(get_value(TypeOfMessages.SERVER_EXIT).encode('utf-8'))
+            s_client.close()
 
     def get_status_listen(self):
         return self.state_listening
@@ -50,3 +73,4 @@ class Server:
             self.state_listening = True
         else:
             self.state_listening = False
+            

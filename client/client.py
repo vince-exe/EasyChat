@@ -1,7 +1,4 @@
-import socket, sys
-
-from colors.colors import Colors as colors
-
+import socket
 
 
 class Client:
@@ -13,6 +10,8 @@ class Client:
 
         self.buffer_size = buffer_size
         self.wait_time = 10
+        
+        self.connected = None
 
     def connect(self):
         # set timeout for connection
@@ -23,11 +22,14 @@ class Client:
         self.client_socket.settimeout(None)
 
     def recv(self):
-            return self.client_socket.recv(self.buffer_size).decode('utf-8')
+        return self.client_socket.recv(self.buffer_size).decode('utf-8')
     
     def send(self, msg):
         self.client_socket.send(msg.encode('utf-8'))
-
+        
     def close(self):
         self.client_socket.close()
 
+    def set_connected(self, state):
+        self.connected = state
+        

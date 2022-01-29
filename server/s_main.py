@@ -1,7 +1,8 @@
 import sys, os, threading
 
 from server.server import Server
-from colors.colors import Colors as colors, print_logo_server
+from utils.utils import Colors as colors, print_logo_server, get_value
+from client.c_main import TypeOfMessages
 
 def create_server():
     print_logo_server()
@@ -57,13 +58,14 @@ def close(server):
         temp = input(f"\n{colors.RED}Warning: There are still {server.get_active()} active connections!  Are you sure(y / n): {colors.RESET}")
 
         if(temp == "y" or temp == "yes" or temp == "YES" or temp == "Y"):
-            server.close()
+            # first disconnect all the clients
+            server.close(True)
             return True
         else: 
             return False
 
     else: # else there aren't active connections, close the server
-        server.close()
+        server.close(False)
         return True
         
         
@@ -90,37 +92,59 @@ def menu(server):
                 print(f"\n{colors.RED}Enter an existing option :){colors.RESET}\n")
 
         except KeyboardInterrupt:
-            server.close()
+            if server.get_active():
+                server.close(True)
+            else:
+                server.close(False)
             return False
 
 
 def handle_clients(server, conn, ip):
+    # add the comunication socket to the list
+    server.client_list.append(conn)
+    # calculate the index that will be used for del
+    index = (threading.activeCount() - 2) - 1
+    
     while server.run:
-        pass
+        # wait for incoming messages
+        msg = conn.recv(1024).decode('utf-8')
+        # if the the message is "!DISCONNECT": disconnect the client and delete his comunication socket from the list
+        if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
+            # send the "!DISCONNECT" message to the client to confirm
+            conn.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE).encode('utf-8'))
+            print(f"\n{colors.GREEN}{colors.BOLD}The client {colors.RESET}{colors.YELLOW}{colors.BOLD}{ip(0)}{colors.RESET}{colors.GREEN}{colors.BOLD}has just left the chat\n{colors.RESET}")
+                        
+            break
+        # when the client receive the message "!QUIT", they resend to the server to confirm and after they quit
+        elif msg == get_value(TypeOfMessages.SERVER_EXIT):
+            break
 
-        print(f"\n\nip: {ip[0]}")
+    conn.close()
+    del server.client_list[index]
+    
 
 def accept_connections(server):
-    #if the server is listening and is running
+    # if the server is listening and is running
     while server.run:
         conn, ip = server.accept()
+        # set the status Listening/No Listening
         server.set_status()
-        
+
         # create a thread to comunicate with the single client    
         threading.Thread(target=handle_clients, args=(server, conn, ip)).start()
-        
-    return
-
+    
 
 def server_main():
     server = create_server()
     
-    #create a thread for server.accept() because stop the program
+    # create a thread for server.accept() because stop the program
     threading.Thread(target=accept_connections, args=(server,)).start()
 
     while menu(server):
         pass
     
-    # close the server, and exit from the program
-    server.close()
+    # close the server with the "close_client"
+    server.close(False)
+    # close the socket server
+    server.shutdown()
     sys.exit(0)
