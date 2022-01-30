@@ -8,9 +8,9 @@ BUFFER_SIZE = 1024
 
 
 class Server:
-    def __init__(self, public_ip, port, n_listen, state, run_):
+    def __init__(self, private_ip, public_ip, port, n_listen, state, run_):
         # take the ip: IPV4
-        self.ip = socket.gethostbyname(socket.gethostname() + '.local')
+        self.ip = private_ip
         #used for connect a "close_server" client
         self.public_ip = public_ip
         self.port = port

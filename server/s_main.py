@@ -4,12 +4,14 @@ from server.server import Server
 from utils.utils import Colors as colors, print_logo_server, get_value
 from client.c_main import TypeOfMessages
 
+
 def create_server():
     print_logo_server()
     print(f"\t\t       {colors.YELLOW}{colors.BOLD}Create your own Server!!{colors.RESET}")
 
     try:
         port = int(input(f"\n{colors.YELLOW}{colors.BOLD}Port: "))
+        private_ip = input("\nHost Ip: ")
         public_ip = input("\nPublic ip: ")
         n_connection = 11
   
@@ -21,14 +23,14 @@ def create_server():
         sys.exit(0)
 
     except ValueError:
-        print(f"\n{colors.RESET}{colors.RED}Port/Number Connections can not be empty/string !!{colors.RESET}\n")
+        print(f"\n{colors.RESET}{colors.RED}Port/Number Connections/Ip can not be empty/string !!{colors.RESET}\n")
         sys.exit(0)
     
     # try to create the server
     try:    
         os.system('cls||clear')
         # create and return the istance of Server()
-        return Server(public_ip, port, n_connection, True, True) 
+        return Server(private_ip, public_ip, port, n_connection, True, True) 
     
     except PermissionError:
         print(f"\n\n{colors.RESET}{colors.RED}Permission Denied: Can not host a server on port: {port}{colors.RESET}\n")
