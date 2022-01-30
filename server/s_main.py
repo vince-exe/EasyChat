@@ -1,44 +1,67 @@
-import sys, os, threading
+import sys, os, threading, socket
 
 from server.server import Server
 from utils.utils import Colors as colors, print_logo_server, get_value
 from client.c_main import TypeOfMessages
+from client.client import Client
+
+DEFAULT_CONNECTIONS = 10
+DISCONNECT_MESSAGE = "!DISCONNECT"
+
+def get_info():
+    max_connections, max_port = DEFAULT_CONNECTIONS + 1, 0
+    
+    try:
+        private_ip = input(f"{colors.YELLOW}{colors.BOLD}Host Ip: ")
+
+        public_ip = input(f"\nPublic Ip: ") 
+
+        try:
+            while max_connections > DEFAULT_CONNECTIONS or max_connections < 1:
+                max_connections = int(input(f"\nConnections (max: {DEFAULT_CONNECTIONS}/min: 1): "))
+        except ValueError:
+            print(f"\n{colors.RESET}{colors.RED}{colors.BOLD}Connections can not be empty/int!!\n{colors.RESET}")
+            sys.exit(0)
+            
+        try:
+            while max_port < 4500 or max_port > 9999:
+                max_port = int(input("\nPort (max: 9999 / min: 4500): "))
+        except ValueError:
+            print(f"\n{colors.RESET}{colors.RED}{colors.BOLD}Port can not be empty/string !!{colors.RESET}\n")
+            sys.exit(0)
+            
+    except KeyboardInterrupt:
+        sys.exit(0)
+    
+    return (private_ip, public_ip, max_connections, max_port)
+
+
+def check_server(info):
+    # try to create the server
+    try:    
+        # create and return the istance of Server()
+        return Server(info[0], info[1], info[3], info[2], True, True) 
+    
+    except socket.gaierror:
+        print(f"\n{colors.RESET}{colors.RED}{colors.BOLD}Can not host a server on port: {info[3]}, Host Ip: {info[0]}, Public Ip: {info[1]}{colors.RESET}\n")
+        sys.exit(0)
+    
+    except PermissionError:
+        print(f"\n{colors.RESET}{colors.RED}{colors.BOLD}Permission Denied: Can not host a server on port: {info[3]}{colors.RESET}\n")
+        sys.exit(0)
+        
+    except OSError as error:
+        print(f"\n{colors.RESET}{colors.RED}{colors.BOLD}Impossibile to host a server on port: {info[3]} {error}{colors.RESET}\n")
+        sys.exit(0)   
 
 
 def create_server():
     print_logo_server()
-    print(f"\t\t       {colors.YELLOW}{colors.BOLD}Create your own Server!!{colors.RESET}")
-
-    try:
-        port = int(input(f"\n{colors.YELLOW}{colors.BOLD}Port: "))
-        private_ip = input("\nHost Ip: ")
-        public_ip = input("\nPublic ip: ")
-        n_connection = 11
-  
-        while n_connection > 10 or n_connection < 1:
-            n_connection = int(input(f"\n{colors.YELLOW}{colors.BOLD}Connections Number(max: 10 / min: 1): "))
     
-    except KeyboardInterrupt:
-        print(f"\n\n{colors.RESET}{colors.GREEN}Byeeee :){colors.RESET}\n")
-        sys.exit(0)
-
-    except ValueError:
-        print(f"\n{colors.RESET}{colors.RED}Port/Number Connections/Ip can not be empty/string !!{colors.RESET}\n")
-        sys.exit(0)
+    info = get_info()
+    os.system('cls||clear')
     
-    # try to create the server
-    try:    
-        os.system('cls||clear')
-        # create and return the istance of Server()
-        return Server(private_ip, public_ip, port, n_connection, True, True) 
-    
-    except PermissionError:
-        print(f"\n\n{colors.RESET}{colors.RED}Permission Denied: Can not host a server on port: {port}{colors.RESET}\n")
-        sys.exit(0)
-        
-    except OSError as error:
-        print(f"\n\n{colors.RESET}{colors.RED}Impossibile to host a server on port: {port} {error}{colors.RESET}\n")
-        sys.exit(0)
+    return check_server(info)
 
 
 def show_active(server):
