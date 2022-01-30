@@ -78,16 +78,23 @@ def client_main():
     # create a thread for listeing
     threading.Thread(target=receive_message, args=(client,)).start()    
     
-    while client.connected:
-        msg = input(f"{colors.YELLOW}{colors.BOLD}--> {colors.RESET}")
-        
-        if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
-            client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
-            break
-        
-        # check if the lenght of the message is greater then 0 = empty
-        elif len(msg):
-            client.send(msg)
+    try:
+        while client.connected:
+            msg = input(f"{colors.YELLOW}{colors.BOLD}--> {colors.RESET}")
+            
+            if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
+                client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
+                break
+            
+            # check if the lenght of the message is greater then 0 = empty
+            elif len(msg):
+                client.send(msg)
+    
+    except KeyboardInterrupt:
+        client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
+        client.close()
+        print(f"{colors.GREEN}{colors.BOLD}\tDisconnection from the server :)\n{colors.RESET}")
+        sys.exit(0)
     
     # close the client socket
     client.close()

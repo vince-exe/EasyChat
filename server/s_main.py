@@ -92,6 +92,7 @@ def menu(server):
                 print(f"\n{colors.RED}Enter an existing option :){colors.RESET}\n")
 
         except KeyboardInterrupt:
+            # if there are active connections
             if server.get_active():
                 server.close(True)
             else:
@@ -100,11 +101,12 @@ def menu(server):
 
 
 def handle_clients(server, conn, ip):
-    # add the comunication socket to the list
-    server.client_list.append(conn)
-    # calculate the index that will be used for del
-    index = (threading.activeCount() - 2) - 1
-    
+    if server.run:
+        # add the comunication socket to the list
+        server.client_list.append(conn)
+        # calculate the index that will be used for del
+        index = (threading.activeCount() - 2) - 1
+
     while server.run:
         # wait for incoming messages
         msg = conn.recv(1024).decode('utf-8')
@@ -112,15 +114,16 @@ def handle_clients(server, conn, ip):
         if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
             # send the "!DISCONNECT" message to the client to confirm
             conn.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE).encode('utf-8'))
-            print(f"\n{colors.GREEN}{colors.BOLD}The client {colors.RESET}{colors.YELLOW}{colors.BOLD}{ip(0)}{colors.RESET}{colors.GREEN}{colors.BOLD}has just left the chat\n{colors.RESET}")
+            print(f"\n{colors.GREEN}{colors.BOLD}The client {colors.RESET}{colors.YELLOW}{colors.BOLD}{ip[0]}{colors.RESET}{colors.GREEN}{colors.BOLD} has just left the chat\n{colors.RESET}")
                         
             break
         # when the client receive the message "!QUIT", they resend to the server to confirm and after they quit
         elif msg == get_value(TypeOfMessages.SERVER_EXIT):
             break
-
+    
     conn.close()
-    del server.client_list[index]
+    if server.run:
+        del server.client_list[index]
     
 
 def accept_connections(server):
