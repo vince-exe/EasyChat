@@ -31,16 +31,19 @@ class Server:
         self.run = run_
         # a list that contain all the comunications sockets with the clients
         self.client_list = []
-
+        # wait tiem before closing the connection (2.30 minutes)
+        self.wait_time = 150
+    
     def accept(self):
+        self.server_socket.settimeout(None)
         self.server_socket.listen(self.n_listen)
         return self.server_socket.accept()
-        
+     
     def get_active(self):
         # -2 because we exclude the "main" thread and the "connectios_thread"
         return threading.activeCount() - 2
 
-    def shutdown(self):
+    def close(self):
         # close the server socket
         self.server_socket.close()
 
@@ -48,9 +51,26 @@ class Server:
         # create a temp_client that connect to the server and stop it
         t_client = Client(self.public_ip, self.port, self.buffer_size)
         t_client.connect()
+        # send a disconnect message to the server
         t_client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
 
-    def close(self, active):
+    def test_accept(self):
+        self.server_socket.settimeout(2)
+        self.server_socket.listen(self.n_listen)
+        self.server_socket.accept()
+        # reset
+        self.server_socket.settimeout(None)
+
+    def test_connection(self):
+        # create a temp client to check it the connection is possible
+        t_client = Client(self.public_ip, self.port, self.buffer_size)
+        t_client.client_socket.settimeout(3)
+        t_client.connect()
+    
+        t_client.client_socket.settimeout(None)
+        t_client.close()
+        
+    def close_connections(self, active):
         # if there are still active connections
         if active:
             # disconnect all the clients
@@ -58,7 +78,7 @@ class Server:
         else:
             self.run = False
             self.conn_close_client()
-        
+
     def disconecct_all(self):
         for s_client in self.client_list:
             # we have to encode this because we are not using our Clients class but socket class
@@ -73,4 +93,4 @@ class Server:
             self.state_listening = True
         else:
             self.state_listening = False
-            
+    

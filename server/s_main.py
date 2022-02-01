@@ -1,3 +1,4 @@
+from sqlite3 import Time
 import sys, os, threading, socket
 
 from server.server import Server
@@ -7,6 +8,7 @@ from client.client import Client
 
 DEFAULT_CONNECTIONS = 10
 DISCONNECT_MESSAGE = "!DISCONNECT"
+
 
 def get_info():
     max_connections, max_port = DEFAULT_CONNECTIONS + 1, 0
@@ -36,22 +38,26 @@ def get_info():
     return (private_ip, public_ip, max_connections, max_port)
 
 
+
 def check_server(info):
     # try to create the server
-    try:    
-        # create and return the istance of Server()
-        return Server(info[0], info[1], info[3], info[2], True, True) 
-    
+    try:
+        return Server(info[0], info[1], info[3], info[2], True, True)
+
+    except socket.timeout:
+        print(f"\n{colors.RED}{colors.BOLD}Impossible host the server on the given info{colors.RESET}\n")
+        sys.exit(0)
+
     except socket.gaierror:
-        print(f"\n{colors.RESET}{colors.RED}{colors.BOLD}Can not host a server on port: {info[3]}, Host Ip: {info[0]}, Public Ip: {info[1]}{colors.RESET}\n")
+        print(f"\n{colors.RED}{colors.BOLD}Impossible host the server on the given info{colors.RESET}\n")
         sys.exit(0)
     
     except PermissionError:
-        print(f"\n{colors.RESET}{colors.RED}{colors.BOLD}Permission Denied: Can not host a server on port: {info[3]}{colors.RESET}\n")
+        print(f"\n{colors.RED}{colors.BOLD}Permission Denied: Can not host a server on port: {info[3]}{colors.RESET}\n")
         sys.exit(0)
         
-    except OSError as error:
-        print(f"\n{colors.RESET}{colors.RED}{colors.BOLD}Impossibile to host a server on port: {info[3]} {error}{colors.RESET}\n")
+    except OSError:
+        print(f"\n{colors.RED}{colors.BOLD}Impossible host the server on the given info{colors.RESET}\n")
         sys.exit(0)   
 
 
@@ -79,21 +85,26 @@ def take_option():
             
 
 def close(server):
-    if server.get_active(): # if there are still active connections
-        temp = input(f"\n{colors.RED}Warning: There are still {server.get_active()} active connections!  Are you sure(y / n): {colors.RESET}")
+    try:
+        if server.get_active(): # if there are still active connections
+            temp = input(f"\n{colors.RED}Warning: There are still {server.get_active()} active connections!  Are you sure(y / n): {colors.RESET}")
 
-        if(temp == "y" or temp == "yes" or temp == "YES" or temp == "Y"):
-            # first disconnect all the clients
-            server.close(True)
+            if(temp == "y" or temp == "yes" or temp == "YES" or temp == "Y"):
+                # first disconnect all the clients
+                server.close_connections(True)
+                return True
+            else: 
+                return False
+
+        else: # else there aren't active connections, close the server
+            server.close_connections(False)
             return True
-        else: 
-            return False
-
-    else: # else there aren't active connections, close the server
-        server.close(False)
+    
+    except KeyboardInterrupt:
+        server.close_connections(True)
         return True
-        
-        
+
+
 def menu(server):
     while True:   
         try:  
@@ -119,9 +130,9 @@ def menu(server):
         except KeyboardInterrupt:
             # if there are active connections
             if server.get_active():
-                server.close(True)
+                server.close_connections(True)
             else:
-                server.close(False)
+                server.close_connections(False)
             return False
 
 
@@ -139,17 +150,48 @@ def handle_clients(server, conn, ip):
         if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
             # send the "!DISCONNECT" message to the client to confirm
             conn.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE).encode('utf-8'))
-            print(f"\n{colors.GREEN}{colors.BOLD}The client {colors.RESET}{colors.YELLOW}{colors.BOLD}{ip[0]}{colors.RESET}{colors.GREEN}{colors.BOLD} has just left the chat\n{colors.RESET}")
-                        
             break
         # when the client receive the message "!QUIT", they resend to the server to confirm and after they quit
         elif msg == get_value(TypeOfMessages.SERVER_EXIT):
             break
-    
+        
     conn.close()
     if server.run:
         del server.client_list[index]
+
+
+def test_conn(server):
+    try:
+        # try to connect to the server with a temp client to see if the connection is possible
+        server.test_connection()
     
+    except socket.timeout:
+        sys.exit(0)
+    
+    except socket.gaierror:
+        print(f"\n{colors.RED}{colors.BOLD}Impossible host the server on the given info, the program will exit after 2 seconds{colors.RESET}\n")
+        sys.exit(0)
+
+    except ConnectionRefusedError:
+        print(f"\n{colors.RED}{colors.BOLD}Impossible host the server on the given info, the program will exit after 2 seconds{colors.RESET}\n")
+        sys.exit(0)
+        
+    except KeyboardInterrupt:
+        sys.exit(0)
+        
+    
+def check_connections(server):
+    # start the thred to connect the temp client
+    threading.Thread(target=test_conn, args=(server,)).start()
+    try:
+        server.test_accept()
+       
+    except socket.timeout:
+        sys.exit(0)
+        
+    except KeyboardInterrupt:
+        sys.exit(0)
+
 
 def accept_connections(server):
     # if the server is listening and is running
@@ -161,18 +203,21 @@ def accept_connections(server):
         # create a thread to comunicate with the single client    
         threading.Thread(target=handle_clients, args=(server, conn, ip)).start()
     
-
+        
 def server_main():
+    # create the server
     server = create_server()
-    
+    # check if the connections with the clients is possible
+    check_connections(server)
+
     # create a thread for server.accept() because stop the program
     threading.Thread(target=accept_connections, args=(server,)).start()
-
+    
     while menu(server):
         pass
     
     # close the server with the "close_client"
-    server.close(False)
+    server.close_connections(False)
     # close the socket server
-    server.shutdown()
+    server.close()
     sys.exit(0)
