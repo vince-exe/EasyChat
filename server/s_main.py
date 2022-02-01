@@ -32,7 +32,7 @@ def get_info():
             
     except KeyboardInterrupt:
         sys.exit(0)
-    
+
     return (private_ip, public_ip, max_connections, max_port)
 
 

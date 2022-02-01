@@ -59,15 +59,39 @@ def receive_message(client):
         # when the server quits, sends a message to all the client = "!QUIT" and the client resend the message to confirm
         if msg == get_value(TypeOfMessages.SERVER_EXIT):
             client.send(get_value(TypeOfMessages.SERVER_EXIT))
+            print(f"{colors.RED}{colors.BOLD}\nThe server has interrumpted the connection: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
             client.connected = False
             break
         
         elif msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
             client.connected = False
-            print(f"{colors.RED}{colors.BOLD}\nThe server he interrupted the connection. Press any kay to exit{colors.RESET}\n")
             break
-        
 
+    
+def send(client):
+    try:
+        while client.connected:
+            msg = input(f"{colors.YELLOW}{colors.BOLD}--> {colors.RESET}")
+            
+            if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
+                client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
+                print(f"\n{colors.GREEN}{colors.BOLD}Disconnected from the server\n{colors.RESET}")
+                break
+            
+            # check if the lenght of the message is greater then 0 = empty
+            elif len(msg):
+                client.send(msg)
+            # if the len of the message is 0 (empty) and the client is connected
+            elif not len(msg) and client.connected:
+                print(f"{colors.RED}{colors.BOLD}Can not send empty message :(")
+
+    except KeyboardInterrupt:
+        client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
+        client.close()
+        print(f"{colors.GREEN}{colors.BOLD}\tDisconnection from the server :)\n{colors.RESET}")
+        sys.exit(0)
+
+    
 def client_main():
     client = create_client()
     connect_client(client)
@@ -78,24 +102,8 @@ def client_main():
     # create a thread for listeing
     threading.Thread(target=receive_message, args=(client,)).start()    
     
-    try:
-        while client.connected:
-            msg = input(f"{colors.YELLOW}{colors.BOLD}--> {colors.RESET}")
-            
-            if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
-                client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
-                break
-            
-            # check if the lenght of the message is greater then 0 = empty
-            elif len(msg):
-                client.send(msg)
-    
-    except KeyboardInterrupt:
-        client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
-        client.close()
-        print(f"{colors.GREEN}{colors.BOLD}\tDisconnection from the server :)\n{colors.RESET}")
-        sys.exit(0)
-    
+    send(client)
+
     # close the client socket
     client.close()
     sys.exit(0)
