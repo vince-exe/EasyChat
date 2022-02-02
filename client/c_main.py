@@ -79,7 +79,7 @@ def receive_message(client):
         else:
             # if it's my message color it in green
             if msg == client.msg:
-                print(f"{colors.YELLOW}{colors.BOLD}[Chat]: {colors.GREEN}{msg}{colors.RESET}\n")
+                print(f"{colors.YELLOW}{colors.BOLD}[You]: {colors.GREEN}{msg}{colors.RESET}\n")
             else:
                 print(f"{colors.YELLOW}{colors.BOLD}[Chat]: {msg}{colors.RESET}\n")
             
@@ -102,7 +102,7 @@ def send(client):
                 client.send(msg)
             # if the len of the message is 0 (empty) and the client is connected
             elif not len(msg) and client.connected:
-                print(f"{colors.RED}{colors.BOLD}Can not send empty message :(")
+                print(f"{colors.RED}{colors.BOLD}Can not send empty message :({colors.RESET}")
 
     except KeyboardInterrupt:
         client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
