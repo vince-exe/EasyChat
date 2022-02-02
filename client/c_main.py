@@ -1,7 +1,7 @@
 import sys, os, socket
 import threading
 
-from utils.utils import Colors as colors, print_logo_client, TypeOfMessages, get_value
+from utils.utils import Colors as colors, print_logo_client, TypeOfMessages, get_value, print_start_chat
 from client.client import Client
 
 
@@ -63,15 +63,34 @@ def receive_message(client):
             client.connected = False
             break
         
+        # when the clients want to disconnect, the server to confirm the disconnection resend the DISCONNECT_MESSAGE.
         elif msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
+            print(f"{colors.RED}{colors.BOLD}\nYou have just been disconnected: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
             client.connected = False
             break
+        
+        # when the server is full send a SERVER_FULL message
+        elif msg == get_value(TypeOfMessages.SERVER_FULL):
+            print(f"{colors.RED}{colors.BOLD}\nThe server is full: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
+            client.connected = False
+            break
+        
+        # message of another client
+        else:
+            # if it's my message color it in green
+            if msg == client.msg:
+                print(f"{colors.YELLOW}{colors.BOLD}[Chat]: {colors.GREEN}{msg}{colors.RESET}\n")
+            else:
+                print(f"{colors.YELLOW}{colors.BOLD}[Chat]: {msg}{colors.RESET}\n")
+            
+            client.msg = None
 
-    
+ 
 def send(client):
     try:
         while client.connected:
-            msg = input(f"{colors.YELLOW}{colors.BOLD}--> {colors.RESET}")
+            msg = input(f"{colors.GREEN}{colors.BOLD}\n")
+            client.msg = msg
             
             if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
                 client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
@@ -88,16 +107,14 @@ def send(client):
     except KeyboardInterrupt:
         client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
         client.close()
-        print(f"{colors.GREEN}{colors.BOLD}\tDisconnection from the server :)\n{colors.RESET}")
         sys.exit(0)
 
-    
+
 def client_main():
     client = create_client()
     connect_client(client)
-    os.system('cls||clear')
-
-    print(f"{colors.GREEN}{colors.BOLD}\tClient succesfully connected to the server!!\n{colors.RESET}")
+    print_start_chat()
+    print(f"\t\t\t   {colors.YELLOW}{colors.BOLD}Be respectfu!!{colors.RESET}\n")
 
     # create a thread for listeing
     threading.Thread(target=receive_message, args=(client,)).start()    

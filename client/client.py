@@ -12,6 +12,7 @@ class Client:
         self.wait_time = 10
         
         self.connected = None
+        self.msg = None
 
     def connect(self):
         # set timeout for connection

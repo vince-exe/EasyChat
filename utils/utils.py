@@ -6,7 +6,8 @@ import os
 class TypeOfMessages(Enum):
     DISCONNECT_MESSAGE = "!DISCONNECT"
     SERVER_EXIT = "!QUIT"
-
+    SERVER_FULL = "!FULL"
+    
 
 def get_value(type):
     return type.value
@@ -55,4 +56,16 @@ def print_logo_main():
           ████╔═████║ ██╔══╝  ██║     ██║  ██╗██║  ██║██║╚██╔╝██║██╔══╝
           ╚██╔╝ ╚██╔╝ ███████╗███████╗╚█████╔╝╚█████╔╝██║ ╚═╝ ██║███████╗
            ╚═╝   ╚═╝  ╚══════╝╚══════╝ ╚════╝  ╚════╝ ╚═╝     ╚═╝╚══════╝
+    {Colors.RESET}""")
+    
+
+def print_start_chat():
+    os.system('cls||clear')
+    print(f"""\n{Colors.GREEN}{Colors.BOLD}     
+                ███████╗███╗  ██╗     ██╗ █████╗ ██╗   ██╗
+                ██╔════╝████╗ ██║     ██║██╔══██╗╚██╗ ██╔╝
+                █████╗  ██╔██╗██║     ██║██║  ██║ ╚████╔╝
+                ██╔══╝  ██║╚████║██╗ ██║ ██║  ██║  ╚██╔╝
+                ███████╗██║ ╚███║╚█████╔╝╚█████╔╝   ██║
+                ╚══════╝╚═╝  ╚══╝ ╚════╝  ╚════╝    ╚═╝
     {Colors.RESET}""")

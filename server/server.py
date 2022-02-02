@@ -24,7 +24,7 @@ class Server:
         # contain the max number of connection
         self.n_listen = n_listen
         # counter for connections
-        self.connections_count = 0
+        self.conn_count = 0
         # take care of the server status TRUE: LISTEN / FALSE: NOT LISTEN
         self.state_listening = state
         # True: The server is running / False: the server is not running
@@ -40,8 +40,7 @@ class Server:
         return self.server_socket.accept()
      
     def get_active(self):
-        # -2 because we exclude the "main" thread and the "connectios_thread"
-        return threading.activeCount() - 2
+        return self.conn_count
 
     def close(self):
         # close the server socket
@@ -53,7 +52,7 @@ class Server:
         t_client.connect()
         # send a disconnect message to the server
         t_client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
-
+    
     def test_accept(self):
         self.server_socket.settimeout(2)
         self.server_socket.listen(self.n_listen)
@@ -81,15 +80,34 @@ class Server:
 
     def disconecct_all(self):
         for s_client in self.client_list:
-            # we have to encode this because we are not using our Clients class but socket class
-            s_client.send(get_value(TypeOfMessages.SERVER_EXIT).encode('utf-8'))
-            s_client.close()
+            if s_client:
+                # we have to encode this because we are not using our Clients class but socket class
+                s_client.send(get_value(TypeOfMessages.SERVER_EXIT).encode('utf-8'))
+                s_client.close()
+        
+        self.conn_count = 0
+    
+    def add_conn(self, conn):
+        add = False
+        for i in range(len(self.client_list)):
+            if not self.client_list[i]:
+                self.client_list[i] = conn
+                add = True
+                break
+
+        if not add:
+            self.client_list.append(conn)
+
+    def send_all(self, msg):
+        for s_client in self.client_list:
+            if s_client:
+                s_client.send(msg.encode('utf-8'))    
 
     def get_status_listen(self):
         return self.state_listening
 
     def set_status(self):
-        if (threading.activeCount() - 2) < self.n_listen:
+        if self.conn_count < self.n_listen:
             self.state_listening = True
         else:
             self.state_listening = False

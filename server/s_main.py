@@ -71,13 +71,13 @@ def create_server():
 
 
 def show_active(server):
-    print(f"\n{colors.GREEN}Active Connections: {server.get_active()}{colors.RESET}")
+    print(f"\n{colors.GREEN}Active Connections: {server.get_active()}\tMax Connections: {server.n_listen}{colors.RESET}")
     
     
 def take_option():
     while True:
         try:
-            opt = int(input(f"1)Show Active Connections\n2)Close Server\n\n{colors.BLU}{colors.BOLD}>> {colors.RESET}"))
+            opt = int(input(f"1)Show Active Connections\n2)Close Server\n3)Clear\n\n{colors.BLU}{colors.BOLD}>> {colors.RESET}"))
             return opt
         
         except ValueError:
@@ -124,6 +124,9 @@ def menu(server):
                 if close(server):
                     return False
             
+            elif(opt == 3):
+                os.system('cls||clear')
+
             else:   # default
                 print(f"\n{colors.RED}Enter an existing option :){colors.RESET}\n")
 
@@ -136,29 +139,45 @@ def menu(server):
             return False
 
 
-def handle_clients(server, conn, ip):
-    if server.run:
-        # add the comunication socket to the list
-        server.client_list.append(conn)
-        # calculate the index that will be used for del
-        index = (threading.activeCount() - 2) - 1
+def handle_clients(server, conn, ip, ser_full):
+    # if the server is not full
+    if not ser_full:
+        if server.run:
+            # add the comunication socket to the list
+            server.add_conn(conn)
+            # calculate the index that will be used for del
+            index = (threading.activeCount() - 2) - 1
 
-    while server.run:
-        # wait for incoming messages
-        msg = conn.recv(1024).decode('utf-8')
-        # if the the message is "!DISCONNECT": disconnect the client and delete his comunication socket from the list
-        if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
-            # send the "!DISCONNECT" message to the client to confirm
-            conn.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE).encode('utf-8'))
-            break
-        # when the client receive the message "!QUIT", they resend to the server to confirm and after they quit
-        elif msg == get_value(TypeOfMessages.SERVER_EXIT):
-            break
+        while server.run:
+            # wait for incoming messages
+            msg = conn.recv(1024).decode('utf-8')
+            # if the the message is "!DISCONNECT": disconnect the client and delete his comunication socket from the list
+            if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
+                # send the "!DISCONNECT" message to the client to confirm
+                conn.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE).encode('utf-8'))
+                server.conn_count -= 1
+                break
+            
+            # when the client receive the message "!QUIT", they resend to the server to confirm and after they quit
+            elif msg == get_value(TypeOfMessages.SERVER_EXIT):
+                break
+            
+            # send the message to all the clients
+            else:
+                server.send_all(msg)
+    
+        conn.close()
+        if server.run:
+            server.client_list[index] = 0
+            
+    else:
+        # senf a msg SERVER_FULL to the client that want to connect
+        conn.send(get_value(TypeOfMessages.SERVER_FULL).encode('utf-8'))
+        # close the comunication socket
+        conn.close()
         
-    conn.close()
-    if server.run:
-        del server.client_list[index]
-
+    server.set_status()
+    
 
 def test_conn(server):
     try:
@@ -199,11 +218,18 @@ def accept_connections(server):
         conn, ip = server.accept()
         # set the status Listening/No Listening
         server.set_status()
-
-        # create a thread to comunicate with the single client    
-        threading.Thread(target=handle_clients, args=(server, conn, ip)).start()
-    
         
+        if server.get_status_listen():    
+            # create a thread to comunicate with the single client 
+            server.conn_count += 1  
+            threading.Thread(target=handle_clients, args=(server, conn, ip, False)).start()
+    
+        else:
+            threading.Thread(target=handle_clients, args=(server, conn, ip, True)).start()
+            
+        server.set_status()
+
+
 def server_main():
     # create the server
     server = create_server()
