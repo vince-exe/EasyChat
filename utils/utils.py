@@ -9,17 +9,23 @@ class TypeOfMessages(Enum):
     ServerFull = "!FULL"
     Kick = "!KICk"
     NickalreadyExist = "!NICKALREADYEXIST"
-    
+    Ban = "!BAN"
+    CantEntryBanned = "!CANTENTRY"
+
 def get_value(type):
     return type.value
-
 
 def disconnect_msg(user):
     return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}User {Colors.YELLOW}{user} {Colors.GREEN}has just left the chat{Colors.RESET}"
     
-    
 def kick_msg(user):
-    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}User {Colors.YELLOW}{user} {Colors.GREEN}has just been kicked by the Server{Colors.RESET}"
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.YELLOW}{Colors.BOLD}The user {Colors.RED}{Colors.BOLD}{user} {Colors.YELLOW}{Colors.BOLD}has just been kicked{Colors.RESET}"
+
+def ban_msg(user):
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.RED}{Colors.BOLD}The user {Colors.YELLOW}{Colors.BOLD}{user} {Colors.RED}{Colors.BOLD}has just been banned{Colors.RESET}" 
+
+def welcome_msg(user):
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}{Colors.BOLD}The user {Colors.YELLOW}{Colors.BOLD}{user} {Colors.GREEN}{Colors.BOLD}has joined!!{Colors.RESET}"
 
 
 class Colors:

@@ -5,7 +5,6 @@ from utils.utils import *
 from user.user import User
 
 DEFAULT_CONNECTIONS = 10
-DISCONNECT_MESSAGE = "!DISCONNECT"
 
 
 def get_info():
@@ -34,7 +33,6 @@ def get_info():
         sys.exit(0)
 
     return (private_ip, public_ip, max_connections, max_port)
-
 
 
 def check_server(info):
@@ -70,29 +68,76 @@ def create_server():
 
 def show_active(server):
     print(f"\n{Colors.GREEN}Active Connections: {server.get_active()}\tMax Connections: {server.n_listen}{Colors.RESET}")
-    
 
-def show_users(server):
-    print(f"\n{Colors.GREEN}{Colors.BOLD}\n[Users of the Chat]")
+ 
+def ban_user(server):
+    ip = None
+    try:
+        ip = input(f"\n{Colors.RED}{Colors.BOLD}Ip: ")
+    except ValueError:
+        print(f"\n{Colors.RED}{Colors.BOLD}[Error] Ip can not be empty!!\n")
+        return
     
-    for i in range(len(server.users_list)):
-        if server.user_list[i]:
-            print(f"\n{Colors.GREEN}{Colors.BOLD}Nick: {Colors.YELLOW}{server.users_list[i].get_nick()}\t{Colors.GREEN}Ip: {Colors.YELLOW}{server.users_list[i].get_ip()}")    
+    # check if the ip exist
+    index = server.check_ip(ip, False)
+    # if there is the ip that he wants to kick
+    if index != -1:
+        server.ban_ip(index, ip)
+    else:
+        print(f"\n{Colors.RED}{Colors.BOLD}[Error]: The ip: {Colors.YELLOW}{Colors.BOLD}{ip}{Colors.RED}{Colors.BOLD} doesn't exist{Colors.RESET}\n")
+
+
+def pardon_user(server):
+    ip = None
+    try:
+        ip = input(f"\n{Colors.RED}{Colors.BOLD}Ip: ")
+    except ValueError:
+        print(f"\n{Colors.RED}{Colors.BOLD}[Error] Ip can not be empty!!\n")
+        return
+    
+    # check if the ip exist
+    index = server.check_ip(ip, True)
+    if index != -1:
+        server.pardon_ip(index)
+
+    else:
+        print(f"\n{Colors.RED}{Colors.BOLD}[Error]: The ip: {Colors.YELLOW}{Colors.BOLD}{ip}{Colors.RED}{Colors.BOLD} doesn't exist{Colors.RESET}\n")
+
+
+def show(server, banned): 
+    # if he wants to see the banned users
+    if banned:
+        for i in range(len(server.black_list)):
+            if server.black_list[i]:
+                print(f"\n{Colors.GREEN}{Colors.BOLD}Nick: {Colors.YELLOW}{server.black_list[i].get_nick()}\t{Colors.GREEN}Ip: {Colors.YELLOW}{server.black_list[i].get_ip()}")  
+    
+    # he wants to see the normal users
+    else:
+        for i in range(len(server.users_list)):
+            if server.users_list[i]:
+                print(f"\n{Colors.GREEN}{Colors.BOLD}Nick: {Colors.YELLOW}{server.users_list[i].get_nick()}\t{Colors.GREEN}Ip: {Colors.YELLOW}{server.users_list[i].get_ip()}")    
 
     
 def kick_user(server):
     nick_kick = input(f"\n{Colors.RED}{Colors.BOLD}Nick: ")        
-    if not server.kick_user(nick_kick):
-        print(f"\n{Colors.RED}{Colors.BOLD}[Error] there is no user with the name: {nick_kick}\n")
 
+    # check if the nick exist
+    index = server.check_user(nick_kick)
+    if index != -1:
+        print(f"\n{Colors.GREEN}{Colors.BOLD}Succesfully kicked the user: {Colors.YELLOW}{Colors.BOLD}{nick_kick}\n{Colors.RESET}")
+        server.kick_user(index)
+        server.kicked_user = nick_kick
+    
+    # if there isn't the nick
     else:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}Succesfully kicked the user: {nick_kick}\n")
-        
-        
+        print(f"{Colors.RED}{Colors.BOLD}[Server]: Error there isn't any user with the nick: {Colors.YELLOW}{Colors.BOLD}{nick_kick}{Colors.RESET}")        
+        server.kicked_user = nick_kick
+
+
 def take_option():
     while True:
         try:
-            return int(input(f"1)Show Active Connections\n2)Close Server\n3)Clear\n4)Show Users\n5)Kick User\n6)Ban User\n7)Pardon User\n\n{Colors.RED}{Colors.BOLD}>> {Colors.RESET}"))
+            return int(input(f"1)Show Active Connections\n2)Close Server\n3)Clear\n4)Show Users\n5)Kick User\n6)Ban User\n7)Pardon User\n8)Show Banned User\n\n{Colors.RED}{Colors.BOLD}>> {Colors.RESET}"))
         
         except ValueError:
             print(f"\n{Colors.RED}Option can not be empty/string!!{Colors.RESET}\n")
@@ -137,17 +182,35 @@ def menu(server):
             elif(opt == 2):
                 if close(server):
                     return False
-            
+
+            # clear the console
             elif(opt == 3):
                 os.system('cls||clear')
 
+            # show user with ips
             elif(opt == 4):
-                show_users(server)
+                print(f"\n{Colors.GREEN}{Colors.BOLD}\n[Users of the Chat]")
+                show(server, False)
 
+            # kick the user
             elif(opt == 5):
                 kick_user(server)
-
-            else:   # default
+            
+            # ban the user
+            elif(opt == 6):
+                ban_user(server)
+            
+            # pardon the user
+            elif(opt == 7):
+                pardon_user(server)
+            
+            # show banned list    
+            elif(opt == 8):
+                print(f"\n{Colors.RED}{Colors.BOLD}\n[Black List]")
+                show(server, True)
+            
+            # default
+            else:   
                 print(f"\n{Colors.RED}Enter an existing option :){Colors.RESET}\n")
 
         except KeyboardInterrupt:
@@ -159,55 +222,75 @@ def menu(server):
             return False
 
 
-def handle_clients(server, conn, ip, ser_full, nick, nick_free):
+def handle_clients(server, conn, ip, ser_full, nick, nick_free, banned):
     # if the server is not full
     if not ser_full:
-        # if the nick_name is free
-        if nick_free:
-            # if the server is running
-            if server.run:
-                # add the user to the list
-                server.add_conn(User(conn, ip, nick))
-                # calculate the index that will be used for del
-                index = (threading.activeCount() - 2) - 1
+        # if it's not banned
+        if not banned:
+            # if the nick_name is free
+            if nick_free:
+                # if the server is running
+                if server.run:
+                    # welcome msg
+                    server.send_all(welcome_msg(nick))
+                    # add the user to the list
+                    server.add_conn(User(conn, ip, nick))
+                    # calculate the index that will be used for del
+                    index = (threading.activeCount() - 2) - 1
 
-            while server.run:
-                # wait for incoming messages
-                msg = conn.recv(1024).decode('utf-8')
-                
-                # if the the message is "!DISCONNECT": disconnect the client and delete his comunication socket from the list
-                if msg == get_value(TypeOfMessages.DisconnectMessage):
-                    # send the "!DISCONNECT" message to the client to confirm
-                    conn.send(get_value(TypeOfMessages.DisconnectMessage).encode('utf-8'))
-                    server.conn_count -= 1
-                    # send the disconnect message to all the clients
-                    server.send_all(disconnect_msg(nick))
-                    break
-                
-                # when the client receive the message "!QUIT", he resends to the server to confirm and close the connecton and after he quits
-                elif msg == get_value(TypeOfMessages.ServerExit):
-                    break
-                
-                # when the client receive the message "!KICK", he resends to the server to confirm and close the connections and after he quits
-                elif msg == get_value(TypeOfMessages.Kick):
-                    break
-                
-                # send the message to all the clients
-                else:
-                    send_msg = f"[{nick}]: {msg}"
-                    server.send_all(send_msg)
+                while server.run:
+                    # wait for incoming messages
+                    msg = conn.recv(1024).decode('utf-8')
+                    
+                    # CLIENT DISCONNECTED
+                    if msg == get_value(TypeOfMessages.DisconnectMessage):
+                        # send the "!DISCONNECT" message to the client to confirm
+                        conn.send(get_value(TypeOfMessages.DisconnectMessage).encode('utf-8'))
+                        server.conn_count -= 1
+                        # send the disconnect message to all the clients
+                        server.send_all(disconnect_msg(nick))
+                        break
+                    
+                    # when the client receive the message "!QUIT", he resends to the server to confirm and close the connecton and after he quits
+                    elif msg == get_value(TypeOfMessages.ServerExit):
+                        break
+                    
+                    # CLIENT KICKED
+                    elif msg == get_value(TypeOfMessages.Kick):
+                        # send the kick message to all the user
+                        server.send_all(kick_msg(server.kicked_user))
+                        server.conn_count -= 1
+                        break
+                    
+                    # CLIENT BANNED
+                    elif msg == get_value(TypeOfMessages.Ban):
+                        # send the ban message to all the users
+                        server.send_all(ban_msg(server.banned_user))
+                        server.conn_count -= 1
+                        break
+
+                    # NORMAL MESSAGE
+                    else:
+                        send_msg = f"[{nick}]: {msg}"
+                        server.send_all(send_msg)
             
-        # if the nick already exist        
+                if server.run:
+                    # close the connection
+                    conn.close()
+                    # free the space
+                    server.users_list[index] = 0
+                
+            # if the nick already exist        
+            else:
+                conn.send(get_value(TypeOfMessages.NickalreadyExist).encode('utf-8'))
+                conn.close()
+                return
+            
+        # if it's banned
         else:
-            conn.send(get_value(TypeOfMessages.NickalreadyExist).encode('utf-8'))
+            conn.send(get_value(TypeOfMessages.CantEntryBanned).encode('utf-8'))
             conn.close()
             return
-
-        if server.run:
-            # close the connection
-            conn.close()
-            # free the space
-            server.users_list[index] = 0
     
     # if the server is full     
     else:
@@ -218,7 +301,7 @@ def handle_clients(server, conn, ip, ser_full, nick, nick_free):
     
     server.set_status()
     
-
+    
 def test_conn(server):
     try:
         # try to connect to the server with a temp client to see if the connection is possible
@@ -263,20 +346,24 @@ def accept_connections(server):
         server.set_status()
         
         # if the server is listening
-        if server.get_status_listen(): 
-            # check if the nick already exist
-            if server.check_nick(nick):
-                # set the paramater nick_free = False
-                threading.Thread(target=handle_clients, args=(server, conn, ip, False, nick, False)).start()
-            
+        if server.get_status_listen():
+            # check if it's banned
+            if server.check_blacklist(ip[0]):
+                threading.Thread(target=handle_clients, args=(server, conn, ip, False, nick, False, True)).start()
             else:
-                # create a thread to comunicate with the single client 
-                server.conn_count += 1  
-                threading.Thread(target=handle_clients, args=(server, conn, ip, False, nick, True)).start()
+            # check if the nick already exist
+                if server.check_nick(nick):
+                    # set the paramater nick_free = False
+                    threading.Thread(target=handle_clients, args=(server, conn, ip, False, nick, False, False)).start()
+                
+                else:
+                    # create a thread to comunicate with the single client 
+                    server.conn_count += 1  
+                    threading.Thread(target=handle_clients, args=(server, conn, ip, False, nick, True, False)).start()
 
-        # else set the variable 
+        # else set the variable serv_full to True
         else:
-            threading.Thread(target=handle_clients, args=(server, conn, ip, True, nick, True)).start()
+            threading.Thread(target=handle_clients, args=(server, conn, ip, True, nick, True, False)).start()
             
         server.set_status()
 

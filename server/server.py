@@ -1,8 +1,8 @@
 import socket
-from typing import Type
 
 from client.client import Client
 from utils.utils import TypeOfMessages, get_value
+from user.user import BannedUser
 
 
 class Server:
@@ -33,7 +33,11 @@ class Server:
         self.buffer_size = 1024
         # list of the banned clients
         self.black_list = []
-
+        # temp kicked user used for the print
+        self.kicked_user = None
+        # temp banned user used for the print
+        self.banned_user = None
+    
     def accept(self):
         self.server_socket.settimeout(None)
         self.server_socket.listen(self.n_listen)
@@ -98,11 +102,21 @@ class Server:
         if not add:
             self.users_list.append(user)
 
+    # check if there is an ip in the blacklist
+    def check_blacklist(self, ip):
+        for i in range(len(self.black_list)):
+            if self.black_list[i]:
+                if self.black_list[i].ip == ip:
+                    return True
+        return False
+    
+    # send a msg to all the clients
     def send_all(self, msg):
         for i in range(len(self.users_list)):
             if self.users_list[i]:
-                # send the message to all the clients
-                self.users_list[i].conn_socket.send(msg.encode('utf-8'))
+                if len(self.users_list) > 1:
+                    # send the message to all the clients
+                    self.users_list[i].conn_socket.send(msg.encode('utf-8'))
             
     def get_status_listen(self):
         return self.state_listening
@@ -112,22 +126,23 @@ class Server:
             self.state_listening = True
         else:
             self.state_listening = False
-    
-    def kick_user(self, nick):
-        # flag variable
-        there_is = False
+            
+    # check if the user exist
+    def check_user(self, nick):
         for i in range(len(self.users_list)):
             if self.users_list[i]:
-                # if the user exist
-                if(self.users_list[i].get_nick() == nick):
-                    there_is = True
-                    # send a message to him "!KICK"
-                    self.users_list[i].conn_socket.send(get_value(TypeOfMessages.Kick).encode('utf-8'))
-                    # free the space for another client
-                    self.users_list[i] = 0
+                if self.users_list[i].get_nick() == nick:
+                    return i
                 
-        return there_is
+        return -1
     
+    # kick the user
+    def kick_user(self, index):
+        # send a message to him "!KICK"
+        self.users_list[index].conn_socket.send(get_value(TypeOfMessages.Kick).encode('utf-8'))
+        # free the space for another client
+        self.users_list[index] = 0
+                
     def check_nick(self, nick):
         # check if there is another user with the same nickname
         for i in range(len(self.users_list)):
@@ -138,3 +153,52 @@ class Server:
                 
         # else the user doesn't exist so it's ok
         return False
+
+    # check if there is the ip that he want to ban / pardon
+    def check_ip(self, ip, ban_mode):
+        # if he want to search in the blacklist
+        if ban_mode:
+            for i in range(len(self.black_list)):
+                if self.black_list[i]:
+                    if self.black_list[i].get_ip() == ip:
+                        return i
+            return -1
+        # if he want to search in the userslist
+        else:
+            for i in range(len(self.users_list)):
+                if self.users_list[i]:
+                    if self.users_list[i].get_ip() == ip:
+                        return i
+            return -1
+        
+    # ban the ip at the given index
+    def ban_ip(self, index, ip):
+        # check for free position
+        for i in range(len(self.black_list)):
+            # if there is a free position
+            if not self.black_list[i]:  
+                self.addBanned(BannedUser(ip, self.users_list[index].get_nick()), i, index)
+                break
+        
+        # else there aren't free places
+        self.addBanned(BannedUser(ip, self.users_list[index].get_nick()), -1, index)
+    
+    def addBanned(self, banned, indexBanned, indexUser):
+        # if there are free places 
+        if indexBanned != -1:
+            self.black_list[indexBanned] = banned
+
+        # else there aren't free places append
+        else:
+            self.black_list.append(banned)
+
+        # send the BAN message
+        self.users_list[indexUser].conn_socket.send(get_value(TypeOfMessages.Ban).encode('utf-8'))   
+        # save the temp banned user nickname     
+        self.banned_user = self.users_list[indexUser].get_nick()
+        # free a space in the users_list
+        self.users_list[indexUser] = 0   
+                 
+    # pardon the banned ip
+    def pardon_ip(self, index):
+        self.black_list[index] = 0

@@ -9,4 +9,15 @@ class User:
     
     def get_ip(self):
         return self.ip[0]
+
+
+class BannedUser:
+    def __init__(self, ip, nick):
+        self.ip = ip
+        self.nick = nick
+        
+    def get_nick(self):
+        return self.nick
     
+    def get_ip(self):
+        return self.ip

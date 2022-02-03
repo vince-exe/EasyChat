@@ -88,12 +88,27 @@ def receive_message(client):
             print(f"\n{colors.RED}{colors.BOLD}The server kicked you >:(\n")
             client.send(get_value(TypeOfMessages.Kick))
             client.connected = False
+            break
         
         # NICK ALREADY EXIST
         elif msg == get_value(TypeOfMessages.NickalreadyExist):
             print(f"\n{colors.RED}{colors.BOLD}The nickname: {colors.GREEN}{colors.BOLD}{client.nick} {colors.RED}Already exist!!\n")
             client.connected = False
-
+            break
+        
+        # CLIENT BANNED
+        elif msg == get_value(TypeOfMessages.Ban):
+            print(f"\n{colors.RED}{colors.BOLD}The server banned you!!\n")
+            client.send(get_value(TypeOfMessages.Ban))
+            client.connected = False
+            break
+        
+        # CLIENT BANNED THAT TRYIED TO ENTRY
+        elif msg == get_value(TypeOfMessages.CantEntryBanned):
+            print(f"\n{colors.RED}{colors.BOLD}You can't entry the server banned you!!\n")
+            client.connected = False
+            break
+        
         # NORMAL MESSAGE
         else:
             # if the message received != my message, color it in yellow
