@@ -16,7 +16,7 @@ class Client:
         
         self.msg = None
         self.nick = nick
-
+        
     def connect(self):
         # set timeout for connection
         self.client_socket.settimeout(self.wait_time)

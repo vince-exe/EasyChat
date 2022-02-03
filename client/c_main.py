@@ -63,28 +63,40 @@ def receive_message(client):
     while client.connected:
         # waiting for an incoming message
         msg = client.recv()
-        # when the server quits, sends a message to all the client = "!QUIT" and the client resend the message to confirm
+        
+        # SERVER QUIT
         if msg == get_value(TypeOfMessages.ServerExit):
             client.send(get_value(TypeOfMessages.ServerExit))
             print(f"{colors.RED}{colors.BOLD}\nThe server has interrumpted the connection: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
             client.connected = False
             break
         
-        # when the clients want to disconnect, the server to confirm the disconnection resend the DISCONNECT_MESSAGE.
+        # CLIENT DISCONNECT
         elif msg == get_value(TypeOfMessages.DisconnectMessage):
             print(f"{colors.RED}{colors.BOLD}\nYou have just been disconnected: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
             client.connected = False
             break
             
-        # when the server is full send a SERVER_FULL message
+        # SERVER IS FULL
         elif msg == get_value(TypeOfMessages.ServerFull):
             print(f"{colors.RED}{colors.BOLD}\nThe server is full: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
             client.connected = False
             break
         
-        # if it's a normal message of another client
+        # CLIENT KICKED
+        elif msg == get_value(TypeOfMessages.Kick):
+            print(f"\n{colors.RED}{colors.BOLD}The server kicked you >:(\n")
+            client.send(get_value(TypeOfMessages.Kick))
+            client.connected = False
+        
+        # NICK ALREADY EXIST
+        elif msg == get_value(TypeOfMessages.NickalreadyExist):
+            print(f"\n{colors.RED}{colors.BOLD}The nickname: {colors.GREEN}{colors.BOLD}{client.nick} {colors.RED}Already exist!!\n")
+            client.connected = False
+
+        # NORMAL MESSAGE
         else:
-            # if the message received it's not equal to my message, color it in yellow
+            # if the message received != my message, color it in yellow
             if not msg == client.msg:
                 print(f"{colors.YELLOW}{colors.BOLD}{msg}{colors.RESET}\n")
   

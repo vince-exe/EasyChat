@@ -1,10 +1,8 @@
 import socket
+from typing import Type
 
 from client.client import Client
 from utils.utils import TypeOfMessages, get_value
-
-MAX_CONNECTIONS = 10
-BUFFER_SIZE = 1024
 
 
 class Server:
@@ -18,9 +16,7 @@ class Server:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bound the ip and the port to the socket server
         self.server_socket.bind((self.ip, self.port))  
-        self.buffer_size = BUFFER_SIZE
-        # create a list for the active connections
-        self.active_connections = []
+        self.buusertive_connections = []
         # contain the max number of connection
         self.n_listen = n_listen
         # counter for connections
@@ -30,10 +26,14 @@ class Server:
         # True: The server is running / False: the server is not running
         self.run = run_
         # a list that contain all the comunications sockets with the clients
-        self.client_list = []
+        self.users_list = []
         # wait tiem before closing the connection (2.30 minutes)
         self.wait_time = 150
-    
+        # buffer size
+        self.buffer_size = 1024
+        # list of the banned clients
+        self.black_list = []
+
     def accept(self):
         self.server_socket.settimeout(None)
         self.server_socket.listen(self.n_listen)
@@ -45,7 +45,7 @@ class Server:
     def close(self):
         # close the server socket
         self.server_socket.close()
-    
+
     def conn_close_client(self):
         # create a temp_server_socketlient that connect to the server and stop it
         t_client = Client(self.public_ip, self.port, self.buffer_size, None)
@@ -79,30 +79,31 @@ class Server:
             self.conn_close_client()
 
     def disconecct_all(self):
-        for s_client in self.client_list:
-            if s_client:
+        for i in range(len(self.users_list)):
+            if self.users_list[i]:
                 # we have to encode this because we are not using our Clients class but socket class
-                s_client.send(get_value(TypeOfMessages.ServerExit).encode('utf-8'))
-                s_client.close()
+                self.users_list[i].conn_socket.send(get_value(TypeOfMessages.ServerExit).encode('utf-8'))
+                self.users_list[i].conn_socket.close()
         
         self.conn_count = 0
     
-    def add_conn(self, conn):
+    def add_conn(self, user):
         add = False
-        for i in range(len(self.client_list)):
-            if not self.client_list[i]:
-                self.client_list[i] = conn
+        for i in range(len(self.users_list)):
+            if not self.users_list[i]:
+                self.users_list[i] = user
                 add = True
                 break
     
         if not add:
-            self.client_list.append(conn)
+            self.users_list.append(user)
 
     def send_all(self, msg):
-        for s_client in self.client_list:
-            if s_client:
-                s_client.send(msg.encode('utf-8'))    
-
+        for i in range(len(self.users_list)):
+            if self.users_list[i]:
+                # send the message to all the clients
+                self.users_list[i].conn_socket.send(msg.encode('utf-8'))
+            
     def get_status_listen(self):
         return self.state_listening
 
@@ -112,3 +113,28 @@ class Server:
         else:
             self.state_listening = False
     
+    def kick_user(self, nick):
+        # flag variable
+        there_is = False
+        for i in range(len(self.users_list)):
+            if self.users_list[i]:
+                # if the user exist
+                if(self.users_list[i].get_nick() == nick):
+                    there_is = True
+                    # send a message to him "!KICK"
+                    self.users_list[i].conn_socket.send(get_value(TypeOfMessages.Kick).encode('utf-8'))
+                    # free the space for another client
+                    self.users_list[i] = 0
+                
+        return there_is
+    
+    def check_nick(self, nick):
+        # check if there is another user with the same nickname
+        for i in range(len(self.users_list)):
+            if self.users_list[i]:
+                if self.users_list[i].get_nick() == nick:
+                    # return True (the user exist)
+                    return True
+                
+        # else the user doesn't exist so it's ok
+        return False

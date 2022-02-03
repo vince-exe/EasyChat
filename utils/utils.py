@@ -7,18 +7,19 @@ class TypeOfMessages(Enum):
     DisconnectMessage = "!DISCONNECT"
     ServerExit = "!QUIT"
     ServerFull = "!FULL"
-
-
-class TypeOfException(Enum):
-    KeyboardInterrumpt = True
+    Kick = "!KICk"
+    NickalreadyExist = "!NICKALREADYEXIST"
     
 def get_value(type):
     return type.value
 
 
 def disconnect_msg(user):
-    msg = f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}User {Colors.YELLOW}{user} {Colors.GREEN}has just left the chat{Colors.RESET}"
-    return msg
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}User {Colors.YELLOW}{user} {Colors.GREEN}has just left the chat{Colors.RESET}"
+    
+    
+def kick_msg(user):
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}User {Colors.YELLOW}{user} {Colors.GREEN}has just been kicked by the Server{Colors.RESET}"
 
 
 class Colors:
