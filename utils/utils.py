@@ -1,16 +1,24 @@
-from enum import Enum
-
 import os
+
+from enum import Enum
 
 
 class TypeOfMessages(Enum):
-    DISCONNECT_MESSAGE = "!DISCONNECT"
-    SERVER_EXIT = "!QUIT"
-    SERVER_FULL = "!FULL"
-    
+    DisconnectMessage = "!DISCONNECT"
+    ServerExit = "!QUIT"
+    ServerFull = "!FULL"
 
+
+class TypeOfException(Enum):
+    KeyboardInterrumpt = True
+    
 def get_value(type):
     return type.value
+
+
+def disconnect_msg(user):
+    msg = f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}User {Colors.YELLOW}{user} {Colors.GREEN}has just left the chat{Colors.RESET}"
+    return msg
 
 
 class Colors:
@@ -33,7 +41,7 @@ def print_logo_client():
             ╚█████╔╝███████╗██║███████╗██║ ╚███║   ██║
              ╚════╝ ╚══════╝╚═╝ ╚══════╝╚═╝ ╚══╝   ╚═╝
     {Colors.RESET}""")
-
+    print(f"\t\t   {Colors.GREEN}{Colors.BOLD}Hi! Connect to your friend's server")
 
 def print_logo_server():
     os.system('cls||clear')
@@ -69,3 +77,4 @@ def print_start_chat():
                 ███████╗██║ ╚███║╚█████╔╝╚█████╔╝   ██║
                 ╚══════╝╚═╝  ╚══╝ ╚════╝  ╚════╝    ╚═╝
     {Colors.RESET}""")
+    print(f"\t\t\t   {Colors.YELLOW}{Colors.BOLD}Be respectfu!!{Colors.RESET}\n")

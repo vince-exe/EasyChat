@@ -2,17 +2,20 @@ import socket
 
 
 class Client:
-    def __init__(self, ip, port, buffer_size):
+    def __init__(self, ip, port, buffer_size, nick):
         self.ip = ip
         self.port = port
         # create the client socket
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self.buffer_size = buffer_size
+        # time waiting that is used for socket.settimeout
         self.wait_time = 10
-        
+        # flag variable used to check the connection with the server
         self.connected = None
+        
         self.msg = None
+        self.nick = nick
 
     def connect(self):
         # set timeout for connection
@@ -33,4 +36,6 @@ class Client:
 
     def set_connected(self, state):
         self.connected = state
-        
+          
+    def get_nick(self, nick):
+        return self.nick

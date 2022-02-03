@@ -4,18 +4,25 @@ import threading
 from utils.utils import Colors as colors, print_logo_client, TypeOfMessages, get_value, print_start_chat
 from client.client import Client
 
-
 BUFFER_SIZE = 1024
+
+
+def takeNickname(min, max):
+    nick = input(f"\n{colors.GREEN}{colors.BOLD}Nick: ")
+    
+    while len(nick) <= min or len(nick) > max:
+        nick = input(f"\n{colors.GREEN}{colors.BOLD}Nick has to be > 0 and < 6 characters: ")
+        
+    return nick
 
 
 def create_client():
     print_logo_client()
-    print(f"\t\t   {colors.GREEN}{colors.BOLD}Hi! Connect to your friend's server")
-    
+
     try:
         ip = input(f"\n{colors.GREEN}{colors.BOLD}Ip: ")
         port = int(input(f"{colors.GREEN}{colors.BOLD}\nPort: "))
-        print(f"{colors.RESET}")
+        nick = takeNickname(0, 7)
 
     except KeyboardInterrupt:
         print(f"\n{colors.RESET}{colors.GREEN}Byeeee :){colors.RESET}\n")
@@ -26,7 +33,7 @@ def create_client():
         sys.exit(0)
 
     os.system('cls||clear')
-    return Client(ip, port, BUFFER_SIZE)
+    return Client(ip, port, BUFFER_SIZE, nick)
 
 
 def connect_client(client):
@@ -57,65 +64,68 @@ def receive_message(client):
         # waiting for an incoming message
         msg = client.recv()
         # when the server quits, sends a message to all the client = "!QUIT" and the client resend the message to confirm
-        if msg == get_value(TypeOfMessages.SERVER_EXIT):
-            client.send(get_value(TypeOfMessages.SERVER_EXIT))
+        if msg == get_value(TypeOfMessages.ServerExit):
+            client.send(get_value(TypeOfMessages.ServerExit))
             print(f"{colors.RED}{colors.BOLD}\nThe server has interrumpted the connection: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
             client.connected = False
             break
         
         # when the clients want to disconnect, the server to confirm the disconnection resend the DISCONNECT_MESSAGE.
-        elif msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
+        elif msg == get_value(TypeOfMessages.DisconnectMessage):
             print(f"{colors.RED}{colors.BOLD}\nYou have just been disconnected: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
             client.connected = False
             break
-        
+            
         # when the server is full send a SERVER_FULL message
-        elif msg == get_value(TypeOfMessages.SERVER_FULL):
+        elif msg == get_value(TypeOfMessages.ServerFull):
             print(f"{colors.RED}{colors.BOLD}\nThe server is full: Press {colors.GREEN}Enter{colors.RED} to exit{colors.RESET}\n")
             client.connected = False
             break
         
-        # message of another client
+        # if it's a normal message of another client
         else:
-            # if it's my message color it in green
-            if msg == client.msg:
-                print(f"{colors.YELLOW}{colors.BOLD}[You]: {colors.GREEN}{msg}{colors.RESET}\n")
-            else:
-                print(f"{colors.YELLOW}{colors.BOLD}[Chat]: {msg}{colors.RESET}\n")
-            
-            client.msg = None
+            # if the message received it's not equal to my message, color it in yellow
+            if not msg == client.msg:
+                print(f"{colors.YELLOW}{colors.BOLD}{msg}{colors.RESET}\n")
+  
+        client.msg = None
 
- 
+
 def send(client):
     try:
         while client.connected:
-            msg = input(f"{colors.GREEN}{colors.BOLD}\n")
-            client.msg = msg
+            msg = input("\n")
             
-            if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
-                client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
+            if msg == get_value(TypeOfMessages.DisconnectMessage):
+                client.send(get_value(TypeOfMessages.DisconnectMessage))
                 print(f"\n{colors.GREEN}{colors.BOLD}Disconnected from the server\n{colors.RESET}")
                 break
             
-            # check if the lenght of the message is greater then 0 = empty
+            # if the message is good to send
             elif len(msg):
+                # save our message to check it later
+                client.msg = f"[{client.nick}]: {msg}"
                 client.send(msg)
+                
             # if the len of the message is 0 (empty) and the client is connected
             elif not len(msg) and client.connected:
                 print(f"{colors.RED}{colors.BOLD}Can not send empty message :({colors.RESET}")
 
     except KeyboardInterrupt:
-        client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
+        client.send(get_value(TypeOfMessages.DisconnectMessage))
         client.close()
         sys.exit(0)
 
 
 def client_main():
+    # create and connect the client to the server
     client = create_client()
     connect_client(client)
+    
+    # send the nickname to the server
+    client.send(client.nick)
     print_start_chat()
-    print(f"\t\t\t   {colors.YELLOW}{colors.BOLD}Be respectfu!!{colors.RESET}\n")
-
+    
     # create a thread for listeing
     threading.Thread(target=receive_message, args=(client,)).start()    
     

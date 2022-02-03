@@ -1,10 +1,7 @@
-from sqlite3 import Time
 import sys, os, threading, socket
 
 from server.server import Server
-from utils.utils import Colors as colors, print_logo_server, get_value
-from client.c_main import TypeOfMessages
-from client.client import Client
+from utils.utils import Colors as colors, print_logo_server, get_value, TypeOfMessages, disconnect_msg
 
 DEFAULT_CONNECTIONS = 10
 DISCONNECT_MESSAGE = "!DISCONNECT"
@@ -139,7 +136,7 @@ def menu(server):
             return False
 
 
-def handle_clients(server, conn, ip, ser_full):
+def handle_clients(server, conn, ip, ser_full, nick):
     # if the server is not full
     if not ser_full:
         if server.run:
@@ -152,30 +149,34 @@ def handle_clients(server, conn, ip, ser_full):
             # wait for incoming messages
             msg = conn.recv(1024).decode('utf-8')
             # if the the message is "!DISCONNECT": disconnect the client and delete his comunication socket from the list
-            if msg == get_value(TypeOfMessages.DISCONNECT_MESSAGE):
+            if msg == get_value(TypeOfMessages.DisconnectMessage):
                 # send the "!DISCONNECT" message to the client to confirm
-                conn.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE).encode('utf-8'))
+                conn.send(get_value(TypeOfMessages.DisconnectMessage).encode('utf-8'))
                 server.conn_count -= 1
+                # send the disconnect message to all the clients
+                server.send_all(disconnect_msg(nick))
                 break
             
             # when the client receive the message "!QUIT", they resend to the server to confirm and after they quit
-            elif msg == get_value(TypeOfMessages.SERVER_EXIT):
+            elif msg == get_value(TypeOfMessages.ServerExit):
                 break
             
             # send the message to all the clients
             else:
-                server.send_all(msg)
+                send_msg = f"[{nick}]: {msg}"
+                server.send_all(send_msg)
     
         conn.close()
         if server.run:
             server.client_list[index] = 0
-            
+    
+    # if the server is full     
     else:
-        # senf a msg SERVER_FULL to the client that want to connect
-        conn.send(get_value(TypeOfMessages.SERVER_FULL).encode('utf-8'))
+        # send a msg SERVER_FULL to the client that want to connect
+        conn.send(get_value(TypeOfMessages.ServerFull).encode('utf-8'))
         # close the comunication socket
         conn.close()
-        
+    
     server.set_status()
     
 
@@ -216,16 +217,18 @@ def accept_connections(server):
     # if the server is listening and is running
     while server.run:
         conn, ip = server.accept()
+        # take the nickname
+        nick = conn.recv(1024).decode('utf-8')
         # set the status Listening/No Listening
         server.set_status()
         
         if server.get_status_listen():    
             # create a thread to comunicate with the single client 
             server.conn_count += 1  
-            threading.Thread(target=handle_clients, args=(server, conn, ip, False)).start()
+            threading.Thread(target=handle_clients, args=(server, conn, ip, False, nick)).start()
     
         else:
-            threading.Thread(target=handle_clients, args=(server, conn, ip, True)).start()
+            threading.Thread(target=handle_clients, args=(server, conn, ip, True, nick)).start()
             
         server.set_status()
 

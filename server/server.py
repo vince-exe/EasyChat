@@ -1,4 +1,4 @@
-import socket, threading
+import socket
 
 from client.client import Client
 from utils.utils import TypeOfMessages, get_value
@@ -38,20 +38,20 @@ class Server:
         self.server_socket.settimeout(None)
         self.server_socket.listen(self.n_listen)
         return self.server_socket.accept()
-     
+    
     def get_active(self):
         return self.conn_count
 
     def close(self):
         # close the server socket
         self.server_socket.close()
-
+    
     def conn_close_client(self):
-        # create a temp_client that connect to the server and stop it
-        t_client = Client(self.public_ip, self.port, self.buffer_size)
+        # create a temp_server_socketlient that connect to the server and stop it
+        t_client = Client(self.public_ip, self.port, self.buffer_size, None)
         t_client.connect()
         # send a disconnect message to the server
-        t_client.send(get_value(TypeOfMessages.DISCONNECT_MESSAGE))
+        t_client.send(get_value(TypeOfMessages.DisconnectMessage))
     
     def test_accept(self):
         self.server_socket.settimeout(2)
@@ -62,7 +62,7 @@ class Server:
 
     def test_connection(self):
         # create a temp client to check it the connection is possible
-        t_client = Client(self.public_ip, self.port, self.buffer_size)
+        t_client = Client(self.public_ip, self.port, self.buffer_size, None)
         t_client.client_socket.settimeout(3)
         t_client.connect()
     
@@ -82,7 +82,7 @@ class Server:
         for s_client in self.client_list:
             if s_client:
                 # we have to encode this because we are not using our Clients class but socket class
-                s_client.send(get_value(TypeOfMessages.SERVER_EXIT).encode('utf-8'))
+                s_client.send(get_value(TypeOfMessages.ServerExit).encode('utf-8'))
                 s_client.close()
         
         self.conn_count = 0
@@ -94,7 +94,7 @@ class Server:
                 self.client_list[i] = conn
                 add = True
                 break
-
+    
         if not add:
             self.client_list.append(conn)
 
