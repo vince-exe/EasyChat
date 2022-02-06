@@ -1,6 +1,6 @@
 # EasyChat
 
-EasyChat is a programm that allow you to host a server and create a chat with your friends (Only for linux users).
+EasyChat is a program that allow you to host a server and create a chat with your friends (Only for linux users).
 
 ## Installation 1
 
