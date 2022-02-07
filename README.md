@@ -2,6 +2,9 @@
 
 EasyChat is a program that allow you to host a server and create a chat with your friends (Only for linux users).
 
+## Requirements
+python3 :)
+
 ## Installation 1
 
 You can use the command: git clone [https://github.com/vince-exe/EasyChat] to clone the repository and use the .zip file.
