@@ -2,20 +2,19 @@ import sys
 
 from server.s_main import server_main
 from client.c_main import client_main
-from utils.utils import Colors as colors, print_logo_main
+from utils.utils import Colors, print_logo_main
 
 
 if __name__ == '__main__':
     print_logo_main()
-    print(f"\t\t\t\t    {colors.GREEN}{colors.BOLD}Create/Join a chat!!{colors.RESET}\n")
-    
-    try:
-        opt = int(input(f"{colors.YELLOW}{colors.BOLD}1)Create a Chat"
-                        f"                          \n2)Join a chat"
-                        f"                          \n3)Exit"
-                        f"{colors.RESET}            \n\n-> {colors.BLU}{colors.BOLD}"))
 
-        print(f"{colors.RESET}")
+    try:
+        opt = int(input(f"{Colors.BLU}{Colors.BOLD}1) {Colors.RESET}Create a Chat\n"
+                        f"{Colors.BLU}{Colors.BOLD}2) {Colors.RESET}Join a chat\n"
+                        f"{Colors.BLU}{Colors.BOLD}3) {Colors.RESET}Exit\n"
+                        f"{Colors.RESET}         \n-> {Colors.BLU}{Colors.BOLD}"))
+
+        print(f"{Colors.RESET}")
 
         if opt == 1: 
             server_main()
@@ -23,17 +22,17 @@ if __name__ == '__main__':
             client_main()
 
         elif opt == 3:
-            print(f"\n{colors.GREEN}{colors.BOLD}Bye{colors.RESET}")
+            print(f"\n{Colors.GREEN}{Colors.BOLD}Bye{Colors.RESET}")
             sys.exit(0)
 
         else:
-            print(f"\n{colors.RED}ERROR: {colors.RESET}Invalid option :/\n")
+            print(f"\n{Colors.RED}ERROR: {Colors.RESET}Invalid option :/\n")
 
     except KeyboardInterrupt:
-        print(f"\n{colors.MAGENTA}{colors.BOLD}Bye :)\n{colors.RESET}")
+        print(f"\n{Colors.GREEN}{Colors.BOLD}Bye :)\n{Colors.RESET}")
         sys.exit(0)
     
     except ValueError:
-        print(f"\n{colors.RED}{colors.BOLD}ERROR: {colors.RESET}Option must be a number\n")
+        print(f"\n{Colors.RED}{Colors.BOLD}ERROR: {Colors.RESET}Option must be a number\n")
         sys.exit(0)
     

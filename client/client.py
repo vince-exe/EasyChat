@@ -1,5 +1,7 @@
 import socket
 
+from utils.utils import get_value, TypeOfMessages
+
 
 class Client:
     def __init__(self, ip, port, buffer_size, nick):
@@ -26,8 +28,15 @@ class Client:
         self.client_socket.settimeout(None)
 
     def recv(self):
-        return self.client_socket.recv(self.buffer_size).decode('utf-8')
-    
+        try:
+            return self.client_socket.recv(self.buffer_size).decode('utf-8')
+
+        except ConnectionAbortedError:
+            return get_value(TypeOfMessages.QUIT)
+
+        except OSError:
+            return get_value(TypeOfMessages.QUIT)
+
     def send(self, msg):
         self.client_socket.send(msg.encode('utf-8'))
         

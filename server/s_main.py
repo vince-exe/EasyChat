@@ -1,4 +1,3 @@
-import sys
 import threading
 import socket
 
@@ -9,40 +8,10 @@ from user.user import User
 DEFAULT_CONNECTIONS = 10
 
 
-def get_info():
-    max_connections, max_port = DEFAULT_CONNECTIONS + 1, 0
-
-    try:
-        private_ip = input(f"{Colors.BLU}{Colors.BOLD}Host Ip: {Colors.RESET}")
-
-        public_ip = input(f"\n{Colors.YELLOW}{Colors.BOLD}Public Ip: {Colors.RESET}")
-
-        try:
-            while max_connections > DEFAULT_CONNECTIONS or max_connections < 1:
-                max_connections = int(input(f"\nConnections (max: {DEFAULT_CONNECTIONS}/min: 1): "))
-
-        except ValueError:
-            print(f"\n{Colors.RESET}{Colors.RED}{Colors.BOLD}ERROR: {Colors.RESET}Connections can not be empty/int!!\n")
-            sys.exit(0)
-
-        try:
-            while max_port < 4500 or max_port > 9999:
-                max_port = int(input("\nPort (max: 9999 / min: 4500): "))
-
-        except ValueError:
-            print(f"\n{Colors.RESET}{Colors.RED}{Colors.BOLD}Port can not be empty/string !!{Colors.RESET}\n")
-            sys.exit(0)
-
-    except KeyboardInterrupt:
-        sys.exit(0)
-
-    return private_ip, public_ip, max_connections, max_port
-
-
 def check_server(info):
     # try to create the server
     try:
-        return Server(info[0], info[1], info[3], info[2], True, True)
+        return Server(info['PrivateIp'], info['PublicIp'], info['Port'], info['MaxConnections'], True, True)
 
     except socket.timeout:
         print(f"\n{Colors.RED}{Colors.BOLD}ERROR: {Colors.RESET}Impossible host the server on the given info\n")
@@ -61,11 +30,16 @@ def check_server(info):
         print(f"\n{Colors.RED}{Colors.BOLD}ERROR: {Colors.RESET}Impossible host the server on the given info\n")
         sys.exit(0)
 
+    except KeyError:
+        print(f"\n{Colors.RED}{Colors.BOLD}ERROR: {Colors.RESET}Check the config file")
+        sys.exit(0)
+
 
 def create_server():
     print_logo_server()
 
-    info = get_info()
+    info = read_settings_server_errors(ServerConfig.FILE_NAME)
+
     os.system('cls||clear')
 
     return check_server(info)
@@ -302,8 +276,6 @@ def handle_clients(server, conn, ip, ser_full, nick, nick_free, banned):
                     except ConnectionResetError:
                         # send the "!DISCONNECT" message to the client to confirm
                         server.conn_count -= 1
-                        # clear the space
-                        server.active_connections[index] = 0
 
                         # send the disconnect message to all the clients
                         server.send_all(disconnect_msg(nick))
@@ -423,4 +395,6 @@ def server_main():
     server.close_connections(False)
     # close the socket server
     server.close()
+
+    print(f"{Colors.RESET}")
     sys.exit(0)
