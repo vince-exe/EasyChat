@@ -1,7 +1,9 @@
 import socket
 
 from client.client import Client
-from utils.utils import TypeOfMessages, get_value
+
+from utils.utils import TypeOfMessages, get_value, ConnectionErrors
+
 from user.user import BannedUser
 
 
@@ -9,14 +11,14 @@ class Server:
     def __init__(self, private_ip, public_ip, port, n_listen, state, run_):
         # take the ip: IPV4
         self.ip = private_ip
-        #used for connect a "close_server" client
+        # used for connect a "close_server" client
         self.public_ip = public_ip
         self.port = port
         # create the socket server
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bound the ip and the port to the socket server
         self.server_socket.bind((self.ip, self.port))  
-        self.buusertive_connections = []
+        self.active_connections = []
         # contain the max number of connection
         self.n_listen = n_listen
         # counter for connections
@@ -25,9 +27,9 @@ class Server:
         self.state_listening = state
         # True: The server is running / False: the server is not running
         self.run = run_
-        # a list that contain all the comunications sockets with the clients
+        # a list that contain all the communications sockets with the clients
         self.users_list = []
-        # wait tiem before closing the connection (2.30 minutes)
+        # wait time before closing the connection (2.30 minutes)
         self.wait_time = 150
         # buffer size
         self.buffer_size = 1024
@@ -51,7 +53,7 @@ class Server:
         self.server_socket.close()
 
     def conn_close_client(self):
-        # create a temp_server_socketlient that connect to the server and stop it
+        # create a temp_server_socket_client that connect to the server and stop it
         t_client = Client(self.public_ip, self.port, self.buffer_size, None)
         t_client.connect()
         # send a disconnect message to the server
@@ -65,24 +67,36 @@ class Server:
         self.server_socket.settimeout(None)
 
     def test_connection(self):
-        # create a temp client to check it the connection is possible
-        t_client = Client(self.public_ip, self.port, self.buffer_size, None)
-        t_client.client_socket.settimeout(3)
-        t_client.connect()
-    
-        t_client.client_socket.settimeout(None)
-        t_client.close()
-        
+        try:
+            # create a temp client to check it the connection is possible
+            t_client = Client(self.public_ip, self.port, self.buffer_size, None)
+            t_client.client_socket.settimeout(3)
+            t_client.connect()
+
+            t_client.client_socket.settimeout(None)
+            t_client.close()
+
+        except socket.gaierror:
+            return ConnectionErrors.BAD_INFO
+
+        except socket.timeout:
+            return ConnectionErrors.TIME_OUT
+        except OSError:
+            return ConnectionErrors.NO_INTERNET
+
+        except ConnectionRefusedError:
+            return ConnectionErrors.CONNECTION_REFUSED
+
     def close_connections(self, active):
         # if there are still active connections
         if active:
             # disconnect all the clients
-            self.disconecct_all()
+            self.disconnect_all()
         else:
             self.run = False
             self.conn_close_client()
 
-    def disconecct_all(self):
+    def disconnect_all(self):
         for i in range(len(self.users_list)):
             if self.users_list[i]:
                 # we have to encode this because we are not using our Clients class but socket class
@@ -156,14 +170,14 @@ class Server:
 
     # check if there is the ip that he want to ban / pardon
     def check_ip(self, ip, ban_mode):
-        # if he want to search in the blacklist
+        # if he wants to search in the blacklist
         if ban_mode:
             for i in range(len(self.black_list)):
                 if self.black_list[i]:
                     if self.black_list[i].get_ip() == ip:
                         return i
             return -1
-        # if he want to search in the userslist
+        # if he wants to search in the users_list
         else:
             for i in range(len(self.users_list)):
                 if self.users_list[i]:
@@ -177,27 +191,27 @@ class Server:
         for i in range(len(self.black_list)):
             # if there is a free position
             if not self.black_list[i]:  
-                self.addBanned(BannedUser(ip, self.users_list[index].get_nick()), i, index)
+                self.add_banned(BannedUser(ip, self.users_list[index].get_nick()), i, index)
                 break
         
         # else there aren't free places
-        self.addBanned(BannedUser(ip, self.users_list[index].get_nick()), -1, index)
+        self.add_banned(BannedUser(ip, self.users_list[index].get_nick()), -1, index)
     
-    def addBanned(self, banned, indexBanned, indexUser):
+    def add_banned(self, banned, index_banned, index_user):
         # if there are free places 
-        if indexBanned != -1:
-            self.black_list[indexBanned] = banned
+        if index_banned != -1:
+            self.black_list[index_banned] = banned
 
         # else there aren't free places append
         else:
             self.black_list.append(banned)
 
         # send the BAN message
-        self.users_list[indexUser].conn_socket.send(get_value(TypeOfMessages.Ban).encode('utf-8'))   
+        self.users_list[index_user].conn_socket.send(get_value(TypeOfMessages.Ban).encode('utf-8'))
         # save the temp banned user nickname     
-        self.banned_user = self.users_list[indexUser].get_nick()
+        self.banned_user = self.users_list[index_user].get_nick()
         # free a space in the users_list
-        self.users_list[indexUser] = 0   
+        self.users_list[index_user] = 0
                  
     # pardon the banned ip
     def pardon_ip(self, index):

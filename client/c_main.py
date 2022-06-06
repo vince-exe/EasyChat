@@ -91,7 +91,7 @@ def receive_message(client):
             break
         
         # NICK ALREADY EXIST
-        elif msg == get_value(TypeOfMessages.NickalreadyExist):
+        elif msg == get_value(TypeOfMessages.NickAlreadyExist):
             print(f"\n{colors.RED}{colors.BOLD}The nickname: {colors.GREEN}{colors.BOLD}{client.nick} {colors.RED}Already exist!!\n")
             client.connected = False
             break

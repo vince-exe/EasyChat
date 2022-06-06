@@ -8,24 +8,41 @@ class TypeOfMessages(Enum):
     ServerExit = "!QUIT"
     ServerFull = "!FULL"
     Kick = "!KICk"
-    NickalreadyExist = "!NICKALREADYEXIST"
+    NickAlreadyExist = "!NICKALREADYEXIST"
     Ban = "!BAN"
     CantEntryBanned = "!CANTENTRY"
 
-def get_value(type):
-    return type.value
+
+class ConnectionErrors:
+    NO_INTERNET = -1
+    BAD_INFO = -2
+    CONNECTION_REFUSED = -3
+    TIME_OUT = -4
+
+
+def get_value(type_):
+    return type_.value
+
 
 def disconnect_msg(user):
-    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}User {Colors.YELLOW}{user} {Colors.GREEN}has just left the chat{Colors.RESET}"
-    
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}User {Colors.YELLOW}{user} {Colors.GREEN}" \
+           f"has just left the chat{Colors.RESET}"
+
+
 def kick_msg(user):
-    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.YELLOW}{Colors.BOLD}The user {Colors.RED}{Colors.BOLD}{user} {Colors.YELLOW}{Colors.BOLD}has just been kicked{Colors.RESET}"
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.YELLOW}{Colors.BOLD}The user {Colors.RED}{Colors.BOLD}{user}" \
+           f" {Colors.YELLOW}{Colors.BOLD}has just been kicked{Colors.RESET}"
+
 
 def ban_msg(user):
-    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.RED}{Colors.BOLD}The user {Colors.YELLOW}{Colors.BOLD}{user} {Colors.RED}{Colors.BOLD}has just been banned{Colors.RESET}" 
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.RED}{Colors.BOLD}The user {Colors.YELLOW}{Colors.BOLD}{user}" \
+           f" {Colors.RED}{Colors.BOLD}has just been banned{Colors.RESET}"
+
 
 def welcome_msg(user):
-    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}{Colors.BOLD}The user {Colors.YELLOW}{Colors.BOLD}{user} {Colors.GREEN}{Colors.BOLD}has joined!!{Colors.RESET}"
+    return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}{Colors.BOLD}The user " \
+           f"{Colors.YELLOW}{Colors.BOLD}{user}"\
+           f"{Colors.GREEN}{Colors.BOLD}has joined!!{Colors.RESET}"
 
 
 class Colors:
@@ -41,47 +58,48 @@ class Colors:
 def print_logo_client():
     os.system('cls||clear')
     print(f"""\n{Colors.YELLOW}{Colors.BOLD}
-             █████╗ ██╗     ██╗███████╗███╗  ██╗████████╗
-            ██╔══██╗██║     ██║██╔════╝████╗ ██║╚══██╔══╝
-            ██║  ╚═╝██║     ██║█████╗  ██╔██╗██║   ██║
-            ██║  ██╗██║     ██║██╔══╝  ██║╚████║   ██║
-            ╚█████╔╝███████╗██║███████╗██║ ╚███║   ██║
-             ╚════╝ ╚══════╝╚═╝ ╚══════╝╚═╝ ╚══╝   ╚═╝
+                        █████╗ ██╗     ██╗███████╗███╗  ██╗████████╗
+                        ██╔══██╗██║     ██║██╔════╝████╗ ██║╚══██╔══╝
+                        ██║  ╚═╝██║     ██║█████╗  ██╔██╗██║   ██║
+                        ██║  ██╗██║     ██║██╔══╝  ██║╚████║   ██║
+                        ╚█████╔╝███████╗██║███████╗██║ ╚███║   ██║
+                        ╚════╝ ╚══════╝╚═╝ ╚══════╝╚═╝ ╚══╝   ╚═╝
     {Colors.RESET}""")
-    print(f"\t\t   {Colors.GREEN}{Colors.BOLD}Hi! Connect to your friend's server")
+    print(f"\t\t\t\t   {Colors.GREEN}{Colors.BOLD}Hi! Connect to your friend's server")
+
 
 def print_logo_server():
     os.system('cls||clear')
     print(f"""\n{Colors.MAGENTA}{Colors.BOLD}
-             ██████╗███████╗██████╗ ██╗   ██╗███████╗██████╗
-            ██╔════╝██╔════╝██╔══██╗██║   ██║██╔════╝██╔══██╗
-            ╚█████╗ █████╗  ██████╔╝╚██╗ ██╔╝█████╗  ██████╔╝
-             ╚═══██╗██╔══╝  ██╔══██╗ ╚████╔╝ ██╔══╝  ██╔══██╗
-            ██████╔╝███████╗██║  ██║  ╚██╔╝  ███████╗██║  ██║
-            ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
+                         ██████╗███████╗██████╗ ██╗   ██╗███████╗██████╗
+                        ██╔════╝██╔════╝██╔══██╗██║   ██║██╔════╝██╔══██╗
+                        ╚█████╗ █████╗  ██████╔╝╚██╗ ██╔╝█████╗  ██████╔╝
+                         ╚═══██╗██╔══╝  ██╔══██╗ ╚████╔╝ ██╔══╝  ██╔══██╗
+                        ██████╔╝███████╗██║  ██║  ╚██╔╝  ███████╗██║  ██║
+                        ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
     {Colors.RESET}""")
     
 
 def print_logo_main():
     os.system('cls||clear')
     print(f"""\n{Colors.GREEN}{Colors.BOLD}
-         ██╗       ██╗███████╗██╗      █████╗  █████╗ ███╗   ███╗███████╗
-         ██║  ██╗  ██║██╔════╝██║     ██╔══██╗██╔══██╗████╗ ████║██╔════╝
-         ╚██╗████╗██╔╝█████╗  ██║     ██║  ╚═╝██║  ██║██╔████╔██║█████╗ 
-          ████╔═████║ ██╔══╝  ██║     ██║  ██╗██║  ██║██║╚██╔╝██║██╔══╝
-          ╚██╔╝ ╚██╔╝ ███████╗███████╗╚█████╔╝╚█████╔╝██║ ╚═╝ ██║███████╗
-           ╚═╝   ╚═╝  ╚══════╝╚══════╝ ╚════╝  ╚════╝ ╚═╝     ╚═╝╚══════╝
+                     ██╗       ██╗███████╗██╗      █████╗  █████╗ ███╗   ███╗███████╗
+                     ██║  ██╗  ██║██╔════╝██║     ██╔══██╗██╔══██╗████╗ ████║██╔════╝
+                     ╚██╗████╗██╔╝█████╗  ██║     ██║  ╚═╝██║  ██║██╔████╔██║█████╗ 
+                      ████╔═████║ ██╔══╝  ██║     ██║  ██╗██║  ██║██║╚██╔╝██║██╔══╝
+                      ╚██╔╝ ╚██╔╝ ███████╗███████╗╚█████╔╝╚█████╔╝██║ ╚═╝ ██║███████╗
+                       ╚═╝   ╚═╝  ╚══════╝╚══════╝ ╚════╝  ╚════╝ ╚═╝     ╚═╝╚══════╝
     {Colors.RESET}""")
     
 
 def print_start_chat():
     os.system('cls||clear')
     print(f"""\n{Colors.GREEN}{Colors.BOLD}     
-                ███████╗███╗  ██╗     ██╗ █████╗ ██╗   ██╗
-                ██╔════╝████╗ ██║     ██║██╔══██╗╚██╗ ██╔╝
-                █████╗  ██╔██╗██║     ██║██║  ██║ ╚████╔╝
-                ██╔══╝  ██║╚████║██╗ ██║ ██║  ██║  ╚██╔╝
-                ███████╗██║ ╚███║╚█████╔╝╚█████╔╝   ██║
-                ╚══════╝╚═╝  ╚══╝ ╚════╝  ╚════╝    ╚═╝
+                            ███████╗███╗  ██╗     ██╗ █████╗ ██╗   ██╗
+                            ██╔════╝████╗ ██║     ██║██╔══██╗╚██╗ ██╔╝
+                            █████╗  ██╔██╗██║     ██║██║  ██║ ╚████╔╝
+                            ██╔══╝  ██║╚████║██╗ ██║ ██║  ██║  ╚██╔╝
+                            ███████╗██║ ╚███║╚█████╔╝╚█████╔╝   ██║
+                            ╚══════╝╚═╝  ╚══╝ ╚════╝  ╚════╝    ╚═╝
     {Colors.RESET}""")
-    print(f"\t\t\t   {Colors.YELLOW}{Colors.BOLD}Be respectfu!!{Colors.RESET}\n")
+    print(f"\t\t\t\t   {Colors.GREEN}{Colors.BOLD}Be Respectful!!{Colors.RESET}\n")
