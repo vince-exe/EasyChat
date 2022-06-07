@@ -24,7 +24,7 @@ class ConnectionErrors:
 
 
 class ServerConfig:
-    FILE_NAME = 'serverConfig.json'
+    FILE_NAME = "./settings/serverConfig.json"
     MIN_CONNECTIONS = 1
     MAX_CONNECTIONS = 10
     MIN_PORT = 4500
@@ -32,7 +32,7 @@ class ServerConfig:
 
 
 class ClientConfig:
-    FILE_NAME = 'clientConfig.json'
+    FILE_NAME = "./settings/clientConfig.json"
     MIN_PORT = 4500
     MAX_PORT = 9999
     MIN_NICK_LEN = 1
@@ -125,7 +125,7 @@ def print_start_chat():
 
 def read_settings_server_errors(file_name):
     try:
-        with open(file_name, 'r') as file:
+        with open(file_name, "r") as file:
             data = json.load(file)
 
         if data['MaxConnections'] < ServerConfig.MIN_CONNECTIONS or\

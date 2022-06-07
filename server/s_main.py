@@ -283,6 +283,9 @@ def handle_clients(server, conn, ip, ser_full, nick, nick_free, banned):
 
                         break
 
+                    except ConnectionAbortedError:
+                        break
+
                 if server.run:
                     # close the connection
                     conn.close()
