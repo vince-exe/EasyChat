@@ -1,6 +1,6 @@
 {
-  "PrivateIp": "192.168.1.11",
+  "PrivateIp": "192.168.1.7",
   "PublicIp": "87.1.37.52",
-  "Port": 9999,
+  "Port": 7777,
   "MaxConnections": 10
 }

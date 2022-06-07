@@ -277,8 +277,10 @@ def handle_clients(server, conn, ip, ser_full, nick, nick_free, banned):
                         # send the "!DISCONNECT" message to the client to confirm
                         server.conn_count -= 1
 
-                        # send the disconnect message to all the clients
-                        server.send_all(disconnect_msg(nick))
+                        if server.conn_count >= 1:
+                            # send the disconnect message to all the clients
+                            server.send_all(disconnect_msg(nick))
+
                         break
 
                 if server.run:

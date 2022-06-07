@@ -61,7 +61,7 @@ def ban_msg(user):
 def welcome_msg(user):
     return f"{Colors.RED}{Colors.BOLD}[Server]: {Colors.GREEN}{Colors.BOLD}The user " \
            f"{Colors.YELLOW}{Colors.BOLD}{user}"\
-           f"{Colors.GREEN}{Colors.BOLD}has joined!!{Colors.RESET}"
+           f"{Colors.GREEN}{Colors.BOLD} has joined!!{Colors.RESET}"
 
 
 class Colors:
@@ -120,6 +120,7 @@ def print_start_chat():
                                         ███████╗ ██║ ╚███║ ╚█████╔╝╚█████╔╝    ██║
                                         ╚══════╝ ╚═╝  ╚══╝  ╚════╝  ╚════╝     ╚═╝
     {Colors.RESET}""")
+    print(f"\nType {Colors.GREEN}{Colors.BOLD}!DISCONNECT{Colors.RESET} to left the chat")
 
 
 def read_settings_server_errors(file_name):

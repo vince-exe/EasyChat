@@ -94,8 +94,8 @@ def receive_message(client):
         
         # NICK ALREADY EXIST
         elif msg == get_value(TypeOfMessages.NickAlreadyExist):
-            print(f"\n{Colors.RED}{Colors.BOLD}The nickname: {Colors.GREEN}{Colors.BOLD}{client.nick}{Colors.RED}"
-                  f"Already exist!!\n")
+            print(f"\n{Colors.RESET}The nickname: {Colors.GREEN}{Colors.BOLD}{client.nick}{Colors.RESET}"
+                  f" Already exist!!\n")
             client.connected = False
             break
         
@@ -128,7 +128,7 @@ def send(client):
             
             if msg == get_value(TypeOfMessages.DisconnectMessage):
                 client.send(get_value(TypeOfMessages.DisconnectMessage))
-                print(f"\n{Colors.GREEN}{Colors.BOLD}Disconnected from the server\n{Colors.RESET}")
+                client.connected = False
                 break
             
             # if the message is good to send
@@ -139,12 +139,12 @@ def send(client):
                 
             # if the len of the message is 0 (empty) and the client is connected
             elif not len(msg) and client.connected:
-                print(f"{Colors.RED}{Colors.BOLD}Can not send empty message :({Colors.RESET}")
+                print(f"{Colors.RED}{Colors.BOLD}WARNING: {Colors.RESET}Can not send empty message")
 
     except KeyboardInterrupt:
         client.send(get_value(TypeOfMessages.DisconnectMessage))
-        client.close()
-        sys.exit(0)
+        client.connected = False
+        return
 
 
 def client_main():
@@ -158,7 +158,7 @@ def client_main():
     
     # create a thread for listing
     threading.Thread(target=receive_message, args=(client,)).start()    
-    
+
     send(client)
 
     # close the client socket
